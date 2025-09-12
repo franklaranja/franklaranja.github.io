@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header>
+        <div class="hero">
+            <picture>
+               <source srcset="/images/menu-laranja-shop3.avif" type="image/avif">
+               <source srcset="/images/menu-laranja-shop3.webp" type="image/webp">
+               <img src="/images/menu-laranja-shop3.jpg" alt="Hero image">
+            </picture>
+            <nav class="menu">
+                <a href="/articles" class="nav-button">Articles</a>
+                <a href="/code" class="nav-button selected">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1> {{section.title}} </h1>
+          <div class="crate-grid">
+            {% for crate in section.pages %}
+            <div class="card">
+              {% if crate.extra.image %}
+                <picture>
+                  <source srcset="{{ crate.permalink | safe }}{{ crate.extra.image }}.avif" type="image/avif">
+                  <source srcset="{{ crate.permalink | safe }}{{ crate.extra.image }}.webp" type="image/webp">
+                  <img src="{{ crate.permalink | safe}}{{ crate.extra.image }}.png" alt="{{ crate.extra.image_alt | default(value='Icon for ' ~ crate.title) }}" class="crate-image">
+                </picture>
+              {% endif %}
+              <h2>{{ crate.title }}</h2>
+                  <p>{{ crate.extra.description | default(value=crate.summary) | safe }}</p>
+                  <div class="crate-meta">
+                    <span class="badge">{{ crate.extra.type }}</span>
+                    <span class="badge">{{ crate.extra.version }}</span>
+                    <span class="badge">{{ crate.extra.license }}</span>
+                    {% for tag in crate.extra.tags %}
+                      <span class="badge">{{ tag }}</span>
+                    {% endfor %}
+                  </div>
+                  <a href="{{ crate.permalink | safe }}">View Details</a>
+            </div>
+            {% endfor %}
+          </div>
+
+          {{ section.content | safe }}
+        </section>
+    </main>
+{% endblock content %}
+

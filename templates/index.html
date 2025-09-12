@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header>
+        <div class="hero">
+            <picture>
+               <source srcset="/images/menu-laranja-shop2.avif" type="image/avif">
+               <source srcset="/images/menu-laranja-shop2.webp" type="image/webp">
+               <img src="/images/menu-laranja-shop2.jpg" alt="Hero image">
+            </picture>
+            <nav class="menu">
+                <a href="/articles" class="nav-button">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title">Laranja's Rust Shop</h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          {{ section.content | safe }}
+        </section>
+
+        <section class="news-carousel">
+          {% set new = load_data(path="data/new.toml", format="toml") %}
+          <div class="news-item">
+              <div align="center"><img src="images/rust-logo.svg"></div>
+          </div>
+          {% for news in new.item | sort(attribute="date") | reverse %}
+            <div class="news-item card">
+              <h2>{{ news.title }}</h2>
+              <p>{{ news.description }}</p>
+              {% if news.link %}
+              <p><a href="{{ news.link | safe }}">Learn More</a></p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </section>
+    </main>
+{% endblock content %}
+

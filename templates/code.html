@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header>
+        <div class="hero">
+          {% if page.extra.menu_image %}
+            <picture>
+              <source srcset="{{ page.extra.menu_image | safe }}.avif" type="image/avif">
+              <source srcset="{{ page.extra.menu_image | safe }}.webp" type="image/webp">
+              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="Hero image">
+            </picture>
+          {% else %}
+            <picture>
+               <source srcset="/images/menu-laranja-shop3.avif" type="image/avif">
+               <source srcset="/images/menu-laranja-shop3.webp" type="image/webp">
+               <img src="/images/menu-laranja-shop3.jpg" alt="Hero image">
+            </picture>
+          {% endif %}
+            <nav class="menu">
+                <a href="/articles" class="nav-button">Articles</a>
+                <a href="/code" class="nav-button selected">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1>{{ page.title }}</h1>
+          {% if page.extra.image %}
+            <picture>
+              <source srcset="{{ page.extra.image | safe }}.avif" type="image/avif">
+              <source srcset="{{ page.extra.image | safe }}.webp" type="image/webp">
+              <img src="{{ page.extra.image | safe }}.png" alt="{{ page.extra.image_alt }}" class="crate-icon">
+            </picture>
+          {% endif %}
+          <div class="crate-meta">
+            <span class="badge">v{{ page.extra.version }}</span>
+            <span class="badge">{{ page.extra.type }}</span>
+            <span class="badge">{{ page.extra.license }}</span>
+            {% for tag in page.extra.tags %}
+              <span class="badge">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {{ page.content | safe }}
+          <div class="crate-links">
+          {% if page.extra.github %}
+            <a href="{{ page.extra.github }}" class="cta-button">GitHub</a>
+          {% endif %}
+          {% if page.extra.crates_io %}
+             <a href="{{ page.extra.crates_io }}" class="cta-button">crates.io</a>
+          {% endif %}
+          {% if page.extra.docs_rs %}
+             <a href="{{ page.extra.docs_rs }}" class="cta-button">crates.io</a>
+          {% endif %}
+          </div>
+        </section>
+    </main>
+{% endblock content %}
+

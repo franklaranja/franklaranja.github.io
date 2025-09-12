@@ -1,0 +1,75 @@
+
+/* Color Palette CSS Variables */
+/* This palette includes rust-orange, neon-blue, and harmonious accents like green, purple, and neutral gray. */
+/* Tints and shades are generated with even perceptual steps in lightness (using HLS color space) for uniform appearance to the human eye. */
+/* Lightness steps from ~95% (lightest, -50) to ~5% (darkest, -900) in increments of ~10%. */
+/* Base colors are approximated at the -500 level, close to originals for harmony. */
+/* Original rust-orange #e67e22 approximates --orange-400. */
+/* Original neon-blue #00ccff approximates --blue-400. */
+/* Background dark blue (original #0a0e17) can use --blue-900 or --gray-900. */
+
+:root {
+  /* orange palette */
+  --orange-50: #fcf2e8;
+  --orange-100: #f7d7ba;
+  --orange-200: #f2bc8c;
+  --orange-300: #eda15f;
+  --orange-400: #e88731;
+  --orange-500: #ce6d17;
+  --orange-600: #a05512;
+  --orange-700: #733d0d;
+  --orange-800: #452408;
+  --orange-900: #170c03;
+
+  /* blue palette */
+  --blue-50: #e5faff;
+  --blue-100: #b2f0ff;
+  --blue-200: #80e5ff;
+  --blue-300: #4ddbff;
+  --blue-400: #1ad1ff;
+  --blue-500: #00b8e6;
+  --blue-600: #008fb2;
+  --blue-700: #006680;
+  --blue-800: #003d4c;
+  --blue-900: #00141a;
+  --bl: 26 209 255;
+
+  /* green palette (harmonious accent, e.g., for success states) */
+  --green-50: #eafaf1;
+  --green-100: #c1f1d5;
+  --green-200: #97e8b9;
+  --green-300: #6dde9d;
+  --green-400: #44d581;
+  --green-500: #2abb68;
+  --green-600: #219251;
+  --green-700: #17683a;
+  --green-800: #0e3e23;
+  --green-900: #05150c;
+
+  /* purple palette (harmonious accent, e.g., for highlights) */
+  --purple-50: #f4edf7;
+  --purple-100: #dfcae8;
+  --purple-200: #caa6d8;
+  --purple-300: #b483c8;
+  --purple-400: #9f60b9;
+  --purple-500: #85469f;
+  --purple-600: #68377c;
+  --purple-700: #4a2759;
+  --purple-800: #2c1735;
+  --purple-900: #0f0812;
+
+  /* gray palette (neutral for text, backgrounds, inline code) */
+  --gray-50: #f2f3f3;
+  --gray-100: #d7dbdb;
+  --gray-200: #bcc2c3;
+  --gray-300: #a1aaab;
+  --gray-400: #869293;
+  --gray-500: #6c7879;
+  --gray-600: #545e5e;
+  --gray-700: #3c4343;
+  --gray-800: #242828;
+  --gray-900: #0c0d0d;
+
+  /* Additional: Original background dark blue */
+  --background-dark: #0a0e17;
+}

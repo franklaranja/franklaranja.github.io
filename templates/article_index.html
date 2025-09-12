@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header>
+        <div class="hero">
+            <picture>
+               <source srcset="/images/menu-gear-water.avif" type="image/avif">
+               <source srcset="/images/menu-gear-water.webp" type="image/webp">
+               <img src="/images/menu-gear-water.jpg" alt="Heto image">
+            </picture>
+            <nav class="menu">
+                <a href="/articles" class="nav-button selected">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          {% for page in section.pages %}
+          <article>
+          <h2><a href="{{ page.permalink | safe }}">{{ page.title }}</a></h2>
+          <p><strong><em>{{ page.extra.subtitle }}</em></strong><br />
+          {{ page.date }}</p>
+          <p>{{ page.extra.summary }}</p>
+          </article>
+          {% endfor %}
+        </section>
+    </main>
+{% endblock content %}
+

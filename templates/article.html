@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header>
+        <div class="hero">
+          {% if page.extra.menu_image %}
+            <picture>
+              <source srcset="{{ page.extra.menu_image | safe }}.avif" type="image/avif">
+              <source srcset="{{ page.extra.menu_image | safe }}.webp" type="image/webp">
+              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="Hero image">
+            </picture>
+          {% else %}
+            <picture>
+               <source srcset="/images/menu-gear-water.avif" type="image/avif">
+               <source srcset="/images/menu-gear-water.webp" type="image/webp">
+               <img src="/images/menu-gear-water.jpg" alt="Hero image">
+            </picture>
+          {% endif %}
+            <nav class="menu">
+                <a href="/articles" class="nav-button selected">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1>{{ page.title }}</h1>
+
+          {{ page.content | safe }}
+        </section>
+    </main>
+{% endblock content %}
+

@@ -1,0 +1,74 @@
+
+/* Color Palette CSS Variables */
+/* This palette includes rust-orange, neon-blue, and harmonious accents like green, purple, and neutral gray. */
+/* Tints and shades are generated with even perceptual steps in lightness (using HLS color space) for uniform appearance to the human eye. */
+/* Lightness steps from ~95% (lightest, -50) to ~5% (darkest, -900) in increments of ~10%. */
+/* Base colors are approximated at the -500 level, close to originals for harmony. */
+/* Original rust-orange  230 126 34 approximates --orange-400. */
+/* Original neon-blue  0 204 255 approximates --blue-400. */
+/* Background dark blue (original  10 14 23) can use --blue-900 or --gray-900. */
+
+:root {
+  /* orange palette */
+  --orange-50:  252 242 232;
+  --orange-100:  247 215 186;
+  --orange-200:  242 188 140;
+  --orange-300:  237 161 95;
+  --orange-400:  232 135 49;
+  --orange-500:  206 109 23;
+  --orange-600:  160 85 18;
+  --orange-700:  115 61 13;
+  --orange-800:  69 36 8;
+  --orange-900:  23 12 3;
+
+  /* blue palette */
+  --blue-50:  229 250 255;
+  --blue-100:  178 240 255;
+  --blue-200:  128 229 255;
+  --blue-300:  77 219 255;
+  --blue-400:  26 209 255;
+  --blue-500:  0 184 230;
+  --blue-600:  0 143 178;
+  --blue-700:  0 102 128;
+  --blue-800:  0 61 76;
+  --blue-900:  0 20 26;
+
+  /* green palette (harmonious accent, e.g., for success states) */
+  --green-50:  234 250 241;
+  --green-100:  193 241 213;
+  --green-200:  151 232 185;
+  --green-300:  109 222 157;
+  --green-400:  68 213 129;
+  --green-500:  42 187 104;
+  --green-600:  33 146 81;
+  --green-700:  23 104 58;
+  --green-800:  14 62 35;
+  --green-900:  5 21 12;
+
+  /* purple palette (harmonious accent, e.g., for highlights) */
+  --purple-50:  244 237 247;
+  --purple-100:  223 202 232;
+  --purple-200:  202 166 216;
+  --purple-300:  180 131 200;
+  --purple-400:  159 96 185;
+  --purple-500:  133 70 159;
+  --purple-600:  104 55 124;
+  --purple-700:  74 39 89;
+  --purple-800:  44 23 53;
+  --purple-900:  15 8 18;
+
+  /* gray palette (neutral for text, backgrounds, inline code) */
+  --gray-50:  242 243 243;
+  --gray-100:  215 219 219;
+  --gray-200:  188 194 195;
+  --gray-300:  161 170 171;
+  --gray-400:  134 146 147;
+  --gray-500:  108 120 121;
+  --gray-600:  84 94 94;
+  --gray-700:  60 67 67;
+  --gray-800:  36 40 40;
+  --gray-900:  12 13 13;
+
+  /* Additional: Original background dark blue */
+  --background-dark:  10 14 23;
+}

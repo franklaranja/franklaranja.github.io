@@ -1,0 +1,19 @@
+
+  <div class="reference" id="{{ id | safe }}">
+      <span class="ref-authors">{{ authors | safe }}</span>, <span class="ref-year">{{ year | safe }}</span>. 
+      <span class="ref-title">{{ title | safe }}</span>.
+      {% if source_type == "book" %}
+          {{ publisher | safe }}.
+      {% elif source_type == "website" %}
+          <a href="{{ url | safe }}" class="ref-link">{{ url | safe }}</a>.
+      {% elif source_type == "crate" %}
+          Rust crate, <a href="{{ url | safe }}" class="ref-link">{{ url | safe }}</a>.
+      {% elif source_type == "youtube" %}
+          YouTube video, <a href="{{ url | safe }}" class="ref-link">{{ url | safe }}</a>.
+      {% elif source_type == "podcast" %}
+          Podcast, <a href="{{ url | safe }}" class="ref-link">{{ url | safe }}</a>.
+      {% endif %}
+      {% if note %}
+          [{{ note | safe }}]
+      {% endif %}
+  </div>

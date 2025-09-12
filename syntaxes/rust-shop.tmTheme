@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>name</key>
+    <string>Rust Shop Theme</string>
+    <key>settings</key>
+    <array>
+        <!-- Global settings -->
+        <dict>
+            <key>settings</key>
+            <dict>
+                <key>background</key>
+                <string>#00141a</string>
+                <key>foreground</key>
+                <string>#eda15f</string> <!-- --orange-300 for general text -->
+                <key>caret</key>
+                <string>#1ad1ff</string> <!-- --blue-400 -->
+                <key>selection</key>
+                <string>#00141a</string> <!-- --gray-900 -->
+            </dict>
+        </dict>
+
+        <!-- Comments -->
+        <dict>
+            <key>scope</key>
+            <string>comment, comment.line, comment.block</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#869293</string> <!-- --gray-400 for comments -->
+                <key>fontStyle</key>
+                <string>italic</string>
+            </dict>
+        </dict>
+
+        <!-- Keywords and Storage -->
+        <dict>
+            <key>scope</key>
+            <string>keyword, storage.type, storage.modifier, keyword.control, keyword.operator</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#1ad1ff</string> <!-- --blue-400 for keywords -->
+                <!--    <key>fontStyle</key>
+                <string>bold</string> -->
+            </dict>
+        </dict>
+
+        <!-- Strings -->
+        <dict>
+            <key>scope</key>
+            <string>string, string.quoted, string.raw</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#44d581</string> <!-- --green-400 for strings -->
+            </dict>
+        </dict>
+
+        <!-- Numbers and Constants -->
+        <dict>
+            <key>scope</key>
+            <string>constant.numeric, constant.language, constant.character</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#f2bc8c</string> <!-- --orange-200 for numbers -->
+            </dict>
+        </dict>
+
+        <!-- Variables and Parameters -->
+        <dict>
+            <key>scope</key>
+            <string>variable, variable.parameter, variable.other</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#b483c8</string> <!-- --purple-300 for variables -->
+            </dict>
+        </dict>
+
+        <!-- Functions -->
+        <dict>
+            <key>scope</key>
+            <string>entity.name.function, meta.function-call</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#9f60b9</string> <!-- --purple-400 for functions -->
+                <key>fontStyle</key>
+                <string>bold</string>
+            </dict>
+        </dict>
+
+        <!-- Rust-specific: Types and Structs -->
+        <dict>
+            <key>scope</key>
+            <string>entity.name.type, storage.type.struct, storage.type.enum, storage.type.trait</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#e88731</string> <!-- --orange-400 for types -->
+                <key>fontStyle</key>
+                <string>bold</string>
+            </dict>
+        </dict>
+
+        <!-- Rust-specific: Lifetimes -->
+        <dict>
+            <key>scope</key>
+            <string>variable.language, storage.modifier.lifetime</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#80e5ff</string> <!-- --blue-200 for lifetimes -->
+            </dict>
+        </dict>
+
+        <!-- Rust-specific: Macros -->
+        <dict>
+            <key>scope</key>
+            <string>meta.macro, entity.name.function.macro</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#4ddbff</string> <!-- --blue-300 for macros -->
+                <key>fontStyle</key>
+                <string>bold</string>
+            </dict>
+        </dict>
+
+        <!-- Rust-specific: Attributes -->
+        <dict>
+            <key>scope</key>
+            <string>meta.attribute</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#97e8b9</string> <!-- --green-200 for attributes -->
+            </dict>
+        </dict>
+
+        <!-- Rust-specific: Modules -->
+        <dict>
+            <key>scope</key>
+            <string>entity.name.module, entity.name.namespace</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#f2bc8c</string> <!-- --orange-200 for modules -->
+            </dict>
+        </dict>
+
+        <!-- Punctuation and Operators -->
+        <dict>
+            <key>scope</key>
+            <string>punctuation, punctuation.definition, punctuation.section, keyword.operator</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#bcc2c3</string> <!-- --gray-200 for punctuation -->
+            </dict>
+        </dict>
+
+        <!-- Inline code and code blocks -->
+        <dict>
+            <key>scope</key>
+            <string>markup.inline.raw, source</string>
+            <key>settings</key>
+            <dict>
+                <key>background</key>
+                <string>#00141a</string>
+                <key>foreground</key>
+                <string>#f2bc8c</string> <!-- --orange-200 for inline code text -->
+            </dict>
+        </dict>
+
+        <!-- HTML tags (for mixed content, e.g., in templates) -->
+        <dict>
+            <key>scope</key>
+            <string>entity.name.tag</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#1ad1ff</string> <!-- --blue-400 for HTML tags -->
+            </dict>
+        </dict>
+
+        <!-- HTML attributes -->
+        <dict>
+            <key>scope</key>
+            <string>entity.other.attribute-name</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#44d581</string> <!-- --green-400 for attributes -->
+            </dict>
+        </dict>
+
+        <!-- Support (e.g., CSS properties, Rust stdlib) -->
+        <dict>
+            <key>scope</key>
+            <string>support</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#e88731</string> <!-- --orange-400 for support -->
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>
