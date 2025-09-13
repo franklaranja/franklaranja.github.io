@@ -21,26 +21,30 @@
         <section>
           <h1>{{ page.title }}</h1>
 
-          <form id="contactform" aria-label="Contact Form">
+          <form id="contactform" aria-label="Contact Form" novalidate>
+          <div id="form-message" class="form-message" role="status"></div>
             <div class="form-group">
               <label for="name">Name</label>
-              <input type="text" id="name" name="name" placeholder="Your name" required aria-required="true">
+              <input type="text" data-error="Please enter your name" id="name" name="name" placeholder="Your name" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
             </div>
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" placeholder="Your email" required aria-required="true">
+              <input type="email" data-error="Please enter a valid email address" id="email" name="email" placeholder="Your email" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
             </div>
             <div class="form-group">
               <label for="subject">Subject</label>
-              <input type="text" id="subject" name="subject" placeholder="Subject" required aria-required="true">
+              <input type="text" data-error="Please enter the subject of your message " id="subject" name="subject" placeholder="Subject" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
             </div>
             <div class="form-group">
               <label for="message">Message</label>
-              <textarea id="message" name="message" placeholder="Your message" rows="5" required aria-required="true"></textarea>
+              <textarea id="message" data-error="Please enter a message" name="message" placeholder="Your message" rows="5" required aria-required="true"></textarea>
+              <span class="error-message" aria-live="polite"></span>
             </div>
             <button type="submit" class="cta-button">Send Message</button>
           </form>
-          <div id="form-message" class="form-message" role="status">message</div>
           {{ page.content | safe }}
         </section>
     </main>
@@ -51,26 +55,62 @@
 })();
 
 window.onload = function() {
-  document.getElementById('contactform').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent page reload
+  const form = document.querySelector("form");
+
+  function validateField(field) {
+    const errorMessage = field.parentElement.querySelector('.error-message');
+    if (!field.validity.valid) {
+      errorMessage.textContent = field.dataset.error || "This field is required";
+      return false;
+    }
+
+    errorMessage.textContent = "";
+    return true;
+  }
+
+  form.querySelectorAll('input, textarea').forEach( input => {
+    input.addEventListener("blur", () => {
+      validateField(input);
+    });
+  });
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    let isValid = true;
+
+    const fields = form.querySelectorAll('input, textarea');
+
+    fields.forEach( field => {
+      const fieldValid = validateField(field);
+      if (!fieldValid) {
+        isValid = false;
+
+      }
+    });
+
     const formMessage = document.getElementById('form-message');
-    formMessage.textContent = 'Sending...';
     formMessage.classList.remove('success', 'error');
-    
-    emailjs.sendForm('service_xu6jys8', 'template_wgehxyl', this)
-      .then(() => {
-        formMessage.textContent = 'Message sent, thanks!';
-        formMessage.classList.add('success');
-        this.reset();
-        setTimeout(() => {
-          formMessage.textContent = '';
-          formMessage.classList.remove('success');
-        }, 5000);
-      }, (error) => {
-        formMessage.textContent = 'Failed to send message. Please try again.';
-        formMessage.classList.add('error');
-        console.error('EmailJS Error:', error);
-      });
+    if (isValid) { 
+      formMessage.textContent = 'Sending...';
+      emailjs.sendForm('service_xu6jys8', 'template_wgehxyl', this)
+        .then(() => {
+          formMessage.textContent = 'Message sent, thanks!';
+          formMessage.classList.add('success');
+          this.reset();
+          setTimeout(() => {
+            formMessage.textContent = '';
+            formMessage.classList.remove('success');
+          }, 5000);
+        }, (error) => {
+          formMessage.textContent = 'Failed to send message. Please try again.';
+          formMessage.classList.add('error');
+          console.error('EmailJS Error:', error);
+        });
+    } else {
+      formMessage.classList.add('error');
+      formMessage.textContent = 'Please fill in all fields';
+      form.querySelector(':invalid').focus();
+    }
   });
 }
 </script>

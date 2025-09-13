@@ -127,6 +127,8 @@
     --text-color: var(--orange-50);
     --link-color: var(--blue-400);
     --visited-color: var(--blue-100);
+    --error-color: #ff7070;
+
 }
 
 .neon {
@@ -163,13 +165,19 @@
   }
 
   html {
-      -webkit-text-size-adjust: 100%;
-      scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 120%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    font-size: 16px;
+    /* font-size: 16px !important; */
   }
 
   body {
     font-family: var(--main-font);
     font-size: var(--s0);
+    /* font-size: var(--s0) !important; */
     line-height: 1.7;
     accent-color: rgb(var(--green-400));
     background-color: rgb(var(--background-color));
@@ -349,8 +357,8 @@
       font-family: var(--heading-font);
       font-weight: 300;
       position: absolute;
-      top: var(--s2);
-      right: var(--s3);
+      top: var(--s1);
+      right: var(--s2);
       color: rgb(var(--orange-200));
       font-size: var(--s2);
       text-shadow: 0 0 var(--s-5) rgba(var(--blue-900) / 0.7);
@@ -716,11 +724,25 @@
           box-shadow: 0 0 10px rgb(var(--blue-200));
           outline: none;
         }
+        
+        &:user-invalid {
+          border-color: var(--error-color);
+        }
       }
 
       textarea {
         resize: vertical;
         min-height: 100px;
+      }
+
+      .error-message {
+        font-family: var(--interface-font);
+        font-size: var(--s-1);
+        color: var(--error-color);
+
+        &:empty {
+          display: none;
+        }
       }
     }
 
@@ -747,9 +769,9 @@
   }
 
   .form-message {
-    font-family: var(--main-font);
+    font-family: var(--interface-font);
     color: rgb(var(--text-color));
-    font-size: 1em;
+    font-size: var(--s-1);
     text-align: center;
     margin-top: 15px;
     padding: 10px;
@@ -758,21 +780,16 @@
     transition: opacity 0.3s ease-in-out;
 
     &.success {
-      color: rgb(var(--text-color));
-      background: rgba(var(--blue-400) / 0.2);
-      border: 1px solid var(--blue-400);
-      @include neon-glow(var(--blue-400), 2.7s, blue);
+      color: rgb(var(--green-300));
       opacity: 1;
     }
 
     &.error {
-      color: rgb(var(--text-color));
-      background: rgba(var(--purple-400) / 0.2);
-      border: 1px solid var(--purple-400);
-      @include neon-glow(var(--purple-400), 2.7s, blue);
+      color: var(--error-color);
       opacity: 1;
     }
   }
+
 }
 
 .float-image {
@@ -796,6 +813,10 @@ img.photo {
 /* =======================*/
 
 @media (max-width: 50em) {
+  html {
+    font-size: 16px !important;
+  }
+
     .hero {
         max-width: 100%; /* Full width on smaller screens */
         padding: var(--s0);
