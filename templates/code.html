@@ -7,13 +7,13 @@
             <picture>
               <source srcset="{{ page.extra.menu_image | safe }}.avif" type="image/avif">
               <source srcset="{{ page.extra.menu_image | safe }}.webp" type="image/webp">
-              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="Hero image">
+              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="{{ page.extra.menu_image_alt }}">
             </picture>
           {% else %}
             <picture>
                <source srcset="/images/menu-laranja-shop3.avif" type="image/avif">
                <source srcset="/images/menu-laranja-shop3.webp" type="image/webp">
-               <img src="/images/menu-laranja-shop3.jpg" alt="Hero image">
+               <img src="/images/menu-laranja-shop3.jpg" alt="A cyberpunk smidth working in a neon-lit workshop overlooking a futuristic city">
             </picture>
           {% endif %}
             <nav class="menu">

@@ -45,7 +45,7 @@ JPG="/images/${short_name}.jpg"
 AVIF=${AVIF%,*}
 SET_SIZES=${SET_SIZES%,*}
 SET_SIZES=${SET_SIZES%,*}
-SET_SIZES="${SET_SIZES}, $NEW_WIDTH"
+SET_SIZES="${SET_SIZES}, ${NEW_WIDTH}px"
 cat <<END
 <picture>
    <source srcset="${AVIF}" sizes="$SET_SIZES" type="image/avif">

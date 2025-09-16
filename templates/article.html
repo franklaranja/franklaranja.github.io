@@ -7,13 +7,13 @@
             <picture>
               <source srcset="{{ page.extra.menu_image | safe }}.avif" type="image/avif">
               <source srcset="{{ page.extra.menu_image | safe }}.webp" type="image/webp">
-              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="Hero image">
+              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="{{ page.extra.menu_image_alt }}">
             </picture>
           {% else %}
             <picture>
                <source srcset="/images/menu-gear-water.avif" type="image/avif">
                <source srcset="/images/menu-gear-water.webp" type="image/webp">
-               <img src="/images/menu-gear-water.jpg" alt="Hero image">
+               <img src="/images/menu-gear-water.jpg" alt="A red hot gear with a 'R' being put in water">
             </picture>
           {% endif %}
             <nav class="menu">

@@ -4,13 +4,14 @@ date = 2025-08-01
 template = "article.html"
 [extra]
 menu_image = "/images/menu-ratatui-garnish"
+menu_image_alt = "Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge"
 subtitle = "Dynamic, flexible and type-safe trait composition in Rust."
 summary = "This article presents a novel \"flat decorator\" pattern that addresses fundamental limitations in both traditional recursive decorators and current widget design approaches. Instead of nesting decorators within each other or embedding styling directly in widgets, the pattern stores all decorators in a single contiguous collection alongside the core component. Using enum polymorphism rather than trait objects or recursive structures, this approach achieves the composability benefits of the decorator pattern while avoiding type explosion, cache locality issues, and runtime inflexibility. The result is a type-safe, dynamic composition system that trades a small memory overhead for significant gains in code reusability, maintainability, and developer ergonomics—demonstrating how thoughtful use of Rust's type system can create more elegant solutions to common design pattern challenges."
 +++
 
 <div align="center">
 
-<img src="garnish_rosemary.png" alt="Rosemary sprig"  width="50"/>
+<img src="garnish_rosemary.png" alt="Rosemary sprig"  class="w20"/>
 
 *Flexible, dynamic and type-safe composition in Rust*
 
@@ -118,10 +119,10 @@ fn render_ref(&self, area: Rect, buf: &mut Buffer) {
 So `Block` becomes a wrapper of a widget and implements `Widget`, it 
 modifies the input and/or the output of the contained widget. As
 it is a widget it self, it suddenly is possible to add two borders
-around the widget. Voila, now our widgets become like onions: 
+around the widget. Voilà! Now our widgets become like onions: 
 `(Style(Block(Paragraph)))`.
 
-<img src="widget_onion.png" alt="Widget in onion" class="photo" />
+<img src="widget_onion.png" alt="Widget in onion" class="photo w85" />
 
 O, clever me, I just reinvented the **Decorator Pattern**:
 
@@ -231,14 +232,15 @@ a widget with a border.
 
 Let's look again at the composition method. We need a way to combine a 
 widget with the garnish. There is a problem with this, as I mentioned above the onion
-structure that we get. This recursive `struct` very much looks like a
-linked list to me, with all the downsides of a linked list. Instead
+structure that we get, this recursive `struct`, has some downsides: 
+the  widget and garnishes are neither easy to access, nor modify. Instead
 of creating this onion, what about the third way, creating a new type
 that wraps the widget and the garnishes? Can we create a `struct` that
 both wraps the widget and a `Vec` of garnishes? We would be able to
- easily access all applied garnishes. And we would not need to implement
+ easily access all applied garnishes. We would have all the ways of a
+vector to modify the garnishes and we would not need to implement
 all variations of `Widget` for each garnish, only the relevant methods of
-`RenderModifier`. Something like:
+`RenderModifier`. I would like something like:
 
 ```rust
 pub struct GarnishedWidget<W> {
@@ -317,17 +319,30 @@ provides a macro that makes using enums for polymorphism easy.
 The `nodyn!` macro generates an `enum Garnish` which we use as an alternative to
 trait objects, the variants are the different garnishes we have:
 `Style` and `Block`. The macro generates the variant names for us, e.g.
-`Style` expands to `Style(Style)`. The `impl RenderModifier` block gives
-the signatures from the `RenderModifier` trait. Using this `RenderModifier`
-gets implemented for `Garnish` by delegating to the variants.
+`Style` expands to `Style(Style)` and implements `From<variant>` and
+`TryInto<Garnish>` for easy conversions. With the `impl as_is`
+feature `nodyn` generates methods like `is_style` and
+`try_as_style`.
+
+```rust
+let red_garnish: Garnish = Style::default().fg(Color::Red);
+assert!(red_garnish.is_style());
+
+let red_style = red_garnish.try_as_style_ref().unwrap();
+assert_eq!(red_style.fg, Some(Color::Red));
+```
+
+The `impl RenderModifier` block contains the signatures from the
+`RenderModifier` trait. Using this `RenderModifier` gets implemented
+for `Garnish` by delegating to the variants.
 
 The line `vec Garnishes`, creates a wrapper around
 a `Vec<Garnish>` with delegated `Vec` methods and variant-specific
-utilities. It supports flexible insertion via `Into<Enum>` and provides
-methods like `first_*`, `count_*`, and `all_*` for variant-specific access.
-A `garnishes!` macro is also generated for easy initialization.
-`Garnishes` is useful for garnishing several widgets with the
-same garnishes.
+utilities. It supports flexible insertion via `Into<Garnish>` and provides
+methods like `first_style`, `count_style`, and `all_style` for
+variant-specific access. A `garnishes!` macro is also generated
+for easy initialization. `Garnishes` is useful for garnishing
+several widgets with the same garnishes.
 
 The `#[vec(garnishes)]` attribute instructs nodyn to turn the 
 `struct` that follows into a polymorphic `Vec` by adding a field
@@ -403,7 +418,11 @@ This setup is a bit more complex than the basic decorator, but this
 initial complexity and the leverage of traits
 makes the subsequent implementation of garnishes a breeze.
 
+<div align="center"><img src="garnish_mint.png" alt="Basil"  width="140" />
+
 ## Garnishable Widgets
+
+</div>
 
 To make garnishing widgets even easier, I wrote an extension
 traits for for the widget traits that adds a `garnish` method to
@@ -434,7 +453,7 @@ full widgets with borders, padding & titles.
 </div>
 
 Now we start implementing garnishes, in the example above I used `Style` and `Block` as
-variants of the `Garnishes enum`, so **ratatui-garnish** offers the same functionality
+variants of the `Garnish` enum, so **ratatui-garnish** offers the same functionality
 as Ratatui, we implement `Garnish` for both:
 
 ```rust
@@ -481,7 +500,7 @@ Instead of `Block`, `ratatui-garnish` uses many simple garnishes
 to provide similar functionality. As this article's focus is on
 the design pattern used, I won't go over the implementation of
 all garnishes, but give a summary of the garnishes included in
-version 0.1.0 (more garnishes are planned). 
+version 0.1.0 (more garnishes are planned).
 
 ### Borders
 - Standard: `PlainBorder`, `RoundedBorder`, `DoubleBorder`, `ThickBorder`
@@ -501,8 +520,12 @@ version 0.1.0 (more garnishes are planned).
 - `Style` (background colors, text styling)
 - `Padding` (spacing around the widget)
 
-Take a look at the `title` module for a use of `after_render()` as
-`Title<Top>` renders *over* the top row of the widgets `Area`.
+Have a look at the
+source of **ratatui-garnish** to look at how easy it is to
+implement a garnish, implement one or more of the methods from
+`RenderModifier`, that's all! And if you wondered about a use of `after_render`,
+have a look at the `Title<Top>` garnish from the title module, it renders
+*over* the top row of the widgets `Area`.
 
 ## Garnishes
 
@@ -538,18 +561,35 @@ let mut other_widget = Line::raw("Other widget")
 other_widget.extend(garnishes);
 ```
 
+A serializable `Garnishes` would make it easy
+to make ratatui applications themeable.
+Regrettably I could not make `Garnishes` serializable with serde
+as the `Title` garnishes are a wrapper around
+`ratatui::text::Line` which doesn't implement `Serialize` and
+`Deserialize`. 
+
 <div align="center"><img src="garnish_saffron.png" alt="Saffron"  width="100" />
 
-## Demo time!
+## Recipes
 
 </div>
 
-Here are some examples with screenshots of what you can do with ratatui-garnish,
-it.
+Here are some examples with screenshots of what you can do with ratatui-garnish.
+I haven't included the code for the widgets, just the `Vec<Garnish>` used
+to generate the screenshot.
 
-### It's hot, give me some Shade
 
-Examples with shadow.
+
+## Compositions compared
+
+In this article we looked at three way to compose to types of
+structs (A and B) in Rust, 
+
+1. Include struct B in struct A. (Style & Block in ratatui Widgets)
+2. Include struct A in struct B. (Traditional decorator pattern)
+3. Include struct A and B in struct C. (ratatui-garnish)
+
+
 
 <div align="center"><img src="garnish_lemon.png" alt="Lemon curl"  width="150"/>
 
