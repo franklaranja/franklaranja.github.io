@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalabl
+e=yes">
+    <title>
+      Articles | 
+      
+      Laranja's Web Shop
+    </title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+    
+    <header>
+        <div class="hero">
+            <picture>
+               <source srcset="/images/menu-gear-water.avif" type="image/avif">
+               <source srcset="/images/menu-gear-water.webp" type="image/webp">
+               <img src="/images/menu-gear-water.jpg" alt="A red hot gear with a 'R' being put in water">
+            </picture>
+            <nav class="menu">
+                <a href="/articles" class="nav-button selected">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          
+          <article>
+          <h2><a href="https://franklaranja.github.io/articles/garnish-your-widgets/">Garnish your widgets</a></h2>
+          <p><strong><em>Dynamic, flexible and type-safe trait composition in Rust.</em></strong><br />
+          2025-08-01</p>
+          <p>This article presents a novel &quot;flat decorator&quot; pattern that addresses fundamental limitations in both traditional recursive decorators and current widget design approaches. Instead of nesting decorators within each other or embedding styling directly in widgets, the pattern stores all decorators in a single contiguous collection alongside the core component. Using enum polymorphism rather than trait objects or recursive structures, this approach achieves the composability benefits of the decorator pattern while avoiding type explosion, cache locality issues, and runtime inflexibility. The result is a type-safe, dynamic composition system that trades a small memory overhead for significant gains in code reusability, maintainability, and developer ergonomics—demonstrating how thoughtful use of Rust&#x27;s type system can create more elegant solutions to common design pattern challenges.</p>
+          </article>
+          
+        </section>
+    </main>
+
+    <footer>
+      <picture class="flourish">
+         <source srcset="/images/flourish.avif" type="image/avif">
+         <source srcset="/images/flourish.webp" type="image/webp">
+         <img src="/images/flourish.png" alt="flourish with lots of curls">
+      </picture>
+
+      <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
+
+      <p>
+        <a href="/articles">articles</a>
+        | <a href="/code">code</a>
+        | <a href="/contact">contact</a>
+        | <a href="/about">about</a>
+      </p>
+      
+      <p>&copy;2025 <a href="/about/">Frank Laranja</a>
+    <footer>
+</body>
+</html>

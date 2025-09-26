@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalabl
+e=yes">
+    <title>
+      
+      ratatui-garnish | 
+      Laranja's Web Shop
+    </title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+    
+    <header>
+        <div class="hero">
+          
+            <picture>
+              <source srcset="/images/menu-ratatui-garnish.avif" type="image/avif">
+              <source srcset="/images/menu-ratatui-garnish.webp" type="image/webp">
+              <img src="/images/menu-ratatui-garnish.jpg" alt="Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge">
+            </picture>
+          
+            <nav class="menu">
+                <a href="/articles" class="nav-button">Articles</a>
+                <a href="/code" class="nav-button selected">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1>ratatui-garnish</h1>
+          
+            <picture>
+              <source srcset="basil.avif" type="image/avif">
+              <source srcset="basil.webp" type="image/webp">
+              <img src="basil.png" alt="basil sprig" class="crate-icon">
+            </picture>
+          
+          <div class="crate-meta">
+            <span class="badge">v0.1.0</span>
+            <span class="badge">Library</span>
+            <span class="badge">MIT</span>
+            
+              <span class="badge">Ratatui</span>
+            
+              <span class="badge">tui</span>
+            
+              <span class="badge">decorator</span>
+            
+              <span class="badge">widgets</span>
+            
+          </div>
+          <div align="center">
+<p><em>Garnish your Ratatui Widgets</em></p>
+</div>
+<p><code>ratatui-garnish</code> is a powerful composition system for <a href="https://ratatui.rs">Ratatui</a> widgets,
+allowing you to change de rendering of any widget with garnishes like borders, titles, shadows,
+padding, and styles in a flexible, type-safe way. Layer multiple
+garnishes in any order, apply them at runtime, and modify them
+without altering the underlying widget. With zero-cost abstractions
+and no trait objects, <code>ratatui-garnish</code> ensures performance
+and type safety.</p>
+<p>Want a margin outside a border? Add <code>Padding</code> before a border. Need
+multiple titles or a shadow effect? Just garnish! Writing custom
+widgets but dreading the boilerplate for styling or borders?
+Use <code>ratatui-garnish</code> with any widget implementing
+<code>Widget</code> or <code>StatefulWidget</code>.</p>
+<h2 id="features">Features</h2>
+<ul>
+<li><strong>Composable Modifications</strong>: Layer borders, titles, shadows, padding,
+and styles in any order.</li>
+<li><strong>Type-Safe</strong>: No trait objects or dynamic dispatch, preserving
+Rust's type system.</li>
+<li><strong>Zero-Cost Abstractions</strong>: Efficient rendering with no overhead
+for unused garnishes.</li>
+<li><strong>Flexible</strong>: Apply or modify garnishes at runtime.</li>
+<li><strong>Seamless Integration</strong>: Works with any Ratatui widget.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<p>Add <code>ratatui-garnish</code> to your <code>Cargo.toml</code>:</p>
+<pre data-lang="toml" style="background-color:#00141a;color:#eda15f;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bcc2c3;">[</span><span style="color:#f2bc8c;">dependencies</span><span style="color:#bcc2c3;">]
+</span><span style="color:#1ad1ff;">ratatui-garnish </span><span style="color:#bcc2c3;">= &quot;</span><span style="color:#44d581;">0.1.0</span><span style="color:#bcc2c3;">&quot;
+</span><span style="color:#1ad1ff;">ratatui </span><span style="color:#bcc2c3;">= &quot;</span><span style="color:#44d581;">0.29</span><span style="color:#bcc2c3;">&quot;
+</span></code></pre>
+<h2 id="usage">Usage</h2>
+<p>Import the <code>GarnishableWidget</code> trait to add the <code>garnish</code> method to
+any Ratatui widget:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Style</span><span style="color:#bcc2c3;">}, </span><span style="color:#f2bc8c;">text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Text</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui_garnish</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">border</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">RoundedBorder</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">title</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Above</span><span style="color:#bcc2c3;">},</span><span style="color:#f2bc8c;"> GarnishableWidget</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Create a text widget with multiple decorations
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Hello, World!</span><span style="color:#f2bc8c;">\n</span><span style="color:#44d581;">Tasty TUIs from Ratatui</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">RoundedBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">())           </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Add a rounded border
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Above</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">My App</span><span style="color:#bcc2c3;">&quot;))      </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Add a title above
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Blue</span><span style="color:#bcc2c3;">))   </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Set a background color
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">));               </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Add padding inside
+</span></code></pre>
+<p>Garnishes are applied in the order they are added, with <code>before_render</code>
+effects (e.g., styles, shadows) applied first, followed by the widget,
+and then <code>after_render</code> effects (e.g., titles over borders).</p>
+<h3 id="complex-example">Complex Example</h3>
+<p>Combine multiple garnishes for a polished UI:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Style</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Modifier</span><span style="color:#bcc2c3;">}, </span><span style="color:#f2bc8c;">text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui_garnish</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">border</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">DoubleBorder</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">shadow</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Shadow</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">title</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Top</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Bottom</span><span style="color:#bcc2c3;">},</span><span style="color:#f2bc8c;"> GarnishableWidget</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Important Message</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">))                       </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Margin outside
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">DarkGray</span><span style="color:#bcc2c3;">))      </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Background color
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Top</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">⚠ WARNING ⚠</span><span style="color:#bcc2c3;">&quot;,        </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Styled title
+</span><span style="color:#f2bc8c;">        Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Red</span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">add_modifier</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Modifier</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">BOLD</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">margin</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">))
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Bottom</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Status: Active</span><span style="color:#bcc2c3;">&quot;).</span><span style="color:#e88731;">right_aligned</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">margin</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">))
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">DoubleBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">());                   </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Double border
+</span></code></pre>
+<h3 id="reusing-garnishes">Reusing Garnishes</h3>
+<p>Use the <code>Garnishes</code> vec to apply the same garnishes to multiple widgets:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Style</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Modifier</span><span style="color:#bcc2c3;">}, </span><span style="color:#f2bc8c;">text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui_garnish</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">border</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">DoubleBorder</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">title</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Top</span><span style="color:#bcc2c3;">},</span><span style="color:#f2bc8c;"> garnishes</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> GarnishableWidget</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> garnishes </span><span style="color:#1ad1ff;">= </span><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Blue</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    DoubleBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">White</span><span style="color:#bcc2c3;">),
+</span><span style="color:#bcc2c3;">];
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> widget1 </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">First Widget</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Top</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">First</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Red</span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">add_modifier</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Modifier</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">BOLD</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">margin</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">));
+</span><span style="color:#f2bc8c;">widget1</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">extend_from_slice</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#f2bc8c;">garnishes</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> widget2 </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Second Widget</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Top</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Second</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Green</span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">add_modifier</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Modifier</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">BOLD</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">margin</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">));
+</span><span style="color:#f2bc8c;">widget2</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">extend</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">garnishes</span><span style="color:#bcc2c3;">);
+</span></code></pre>
+<h3 id="accessing-garnishes">Accessing Garnishes</h3>
+<p>Treat a <code>GarnishedWidget</code> like a <code>Vec</code> to inspect or modify its garnishes:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Test</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Blue</span><span style="color:#bcc2c3;">))
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">));
+</span><span style="color:#e88731;">assert!</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">widget</span><span style="color:#bcc2c3;">[</span><span style="color:#f2bc8c;">0</span><span style="color:#bcc2c3;">].</span><span style="color:#e88731;">is_style</span><span style="color:#bcc2c3;">());
+</span><span style="color:#e88731;">assert_eq!</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">widget</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">first_padding</span><span style="color:#bcc2c3;">(), </span><span style="color:#e88731;">Some</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">)));
+</span></code></pre>
+<h2 id="available-garnishes">Available Garnishes</h2>
+<h3 id="borders">Borders</h3>
+<ul>
+<li><strong>Standard</strong>: <code>PlainBorder</code>, <code>RoundedBorder</code>, <code>DoubleBorder</code>, <code>ThickBorder</code></li>
+<li><strong>Dashed Variants</strong>: <code>DashedBorder</code>, <code>RoundedDashedBorder</code>, <code>ThickDashedBorder</code>, <code>DoubleDashedBorder</code>, <code>RoundedDoubleDashedBorder</code>, <code>ThickDoubleDashedBorder</code></li>
+<li><strong>Custom</strong>: <code>CharBorder</code> (single character, e.g., <code>****</code>), <code>CustomBorder</code> (custom character set)</li>
+<li><strong>Specialty</strong>: <code>QuadrantInsideBorder</code>, <code>QuadrantOutsideBorder</code>, <code>FatInsideBorder</code>, <code>FatOutsideBorder</code></li>
+</ul>
+<h3 id="titles">Titles</h3>
+<ul>
+<li><strong>Horizontal</strong>: <code>Title&lt;Top&gt;</code> (over top border), <code>Title&lt;Bottom&gt;</code> (over bottom border),
+<code>Title&lt;Above&gt;</code> (reserves space above), <code>Title&lt;Below&gt;</code> (reserves space below)</li>
+<li><strong>Vertical</strong>: <code>Title&lt;Left&gt;</code> (over left border), <code>Title&lt;Right&gt;</code> (over right border),
+<code>Title&lt;Before&gt;</code> (reserves space left), <code>Title&lt;After&gt;</code> (reserves space right)</li>
+</ul>
+<h3 id="shadows">Shadows</h3>
+<ul>
+<li><code>Shadow</code>: Light (<code>░</code>), medium (<code>▒</code>), dark (<code>▓</code>), or full (<code>█</code>) shades with full-character offsets</li>
+<li><code>HalfShadow</code>: Full (<code>█</code>) or quadrant characters (e.g., <code>▗</code>) with half-character offsets</li>
+</ul>
+<h3 id="built-in-ratatui-support">Built-in Ratatui Support</h3>
+<ul>
+<li><code>Style</code>: Background colors, text styling</li>
+<li><code>Padding</code>: Spacing around the widget</li>
+</ul>
+<h2 id="performance">Performance</h2>
+<ul>
+<li>Garnishes are applied in order, allowing precise control over rendering.</li>
+<li>Area modifications are accumulated efficiently.</li>
+<li>Zero-cost abstractions ensure no runtime overhead for unused garnishes.</li>
+<li>No dynamic dispatch or type erasure, preserving type safety and performance.</li>
+</ul>
+<h2 id="compatibility">Compatibility</h2>
+<p><code>ratatui-garnish</code> integrates seamlessly with Ratatui widgets implementing
+<code>Widget</code> or <code>StatefulWidget</code> following Ratatui's conventions.</p>
+<h2 id="contributing">Contributing</h2>
+<p>This is the first release of <code>ratatui-garnish</code>, and more garnishes are
+planned! Contributions are welcome.</p>
+<h2 id="license">License</h2>
+<p>Licensed under the MIT License. See the <a href="https://github.com/franklaranja/ratatui-garnish/blob/main/LICENSE">LICENSE</a> file for details.</p>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>Built with love for the Rust and Ratatui communities. Inspired by the
+need for flexible, reusable widget modification.</p>
+
+          <div class="crate-links">
+          
+            <a href="https:&#x2F;&#x2F;github.com&#x2F;franklaranja&#x2F;ratatui-garnish" class="cta-button">GitHub</a>
+          
+          
+             <a href="https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;ratatui-garnish" class="cta-button">crates.io</a>
+          
+          
+             <a href="https:&#x2F;&#x2F;docs.rs&#x2F;ratatui-garnish" class="cta-button">crates.io</a>
+          
+          </div>
+        </section>
+    </main>
+
+    <footer>
+      <picture class="flourish">
+         <source srcset="/images/flourish.avif" type="image/avif">
+         <source srcset="/images/flourish.webp" type="image/webp">
+         <img src="/images/flourish.png" alt="flourish with lots of curls">
+      </picture>
+
+      <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
+
+      <p>
+        <a href="/articles">articles</a>
+        | <a href="/code">code</a>
+        | <a href="/contact">contact</a>
+        | <a href="/about">about</a>
+      </p>
+      
+      <p>&copy;2025 <a href="/about/">Frank Laranja</a>
+    <footer>
+</body>
+</html>

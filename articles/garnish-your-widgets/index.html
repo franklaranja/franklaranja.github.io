@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalabl
+e=yes">
+    <title>
+      
+      Garnish your widgets | 
+      Laranja's Web Shop
+    </title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+    
+    <header>
+        <div class="hero">
+          
+            <picture>
+              <source srcset="/images/menu-ratatui-garnish.avif" type="image/avif">
+              <source srcset="/images/menu-ratatui-garnish.webp" type="image/webp">
+              <img src="/images/menu-ratatui-garnish.jpg" alt="Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge">
+            </picture>
+          
+            <nav class="menu">
+                <a href="/articles" class="nav-button selected">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1>Garnish your widgets</h1>
+
+          <div align="center">
+<picture>
+  <source srcset="garnish_rosemary.avif" type="image/avif">
+  <source srcset="garnish_rosemary.webp" type="image/webp">
+  <img src="garnish_rosemary.png" alt="Decorative image of Rosemary garnish" class="w20">
+</picture>
+<p><em>Flexible, dynamic and type-safe composition in Rust</em></p>
+<p><a href="https://github.com/franklaranja/ratatui-garnish">skip to the code</a></p>
+</div>
+<p>Whilst writing new widgets for Ratatui, a Rust library for cooking up delicious
+TUIs (terminal user interfaces)
+<a class="citation" href="#ref-ratatui2023">[Ratatui Developers, 2023]</a>
+
+I experienced some repetitive
+coding involving <code>Style</code> and <code>Block</code> which ratatui widgets typically use to configure
+the colors, padding, border and title of a widget. The inclusion of <code>Style</code>
+and <code>Block</code> in every widget leads not only to repetitive code but also to complexity and inflexibility.</p>
+<p>Composition is the Rust way. But what should be
+composed of what? When composing two items, say a block and a widget,
+widget can contain block (as in Ratatui), block can contain widget or
+a new type can be created containing both.</p>
+<p>An additional pain point in the Ratatui API is that after setting a <code>Block</code>
+you lose access to it, making it impossible to check or modify <code>Block</code> after
+construction. I don't see good reasons for changing the visibility of public
+items, it sure is inconvenient and not user friendly.</p>
+<p>To scratch the itch, I wrote a library that doesn't require widgets to contain
+<code>Style</code> and <code>Block</code> or even know about them. As a consequence, it makes it easier
+to write widgets and new ways to modify widgets: <strong>ratatui-garnish</strong>
+<a class="citation" href="#ref-laranja2025-1">[Laranja, F., 2025-1]</a>
+.
+It uses a flexible,
+dynamic and type-safe composition pattern for Rust. I found the result interesting
+and so wrote this article about it. I hope you find it interesting too!</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_croutons.avif" type="image/avif">
+  <source srcset="garnish_croutons.webp" type="image/webp">
+  <img src="garnish_croutons.png" alt="Decorative image of croutons garnish" class="w40">
+</picture>
+<h2 id="widgets-styles-and-blocks">Widgets, Styles and Blocks</h2>
+</div>
+<p>A widget in Ratatui is something that implements one of the Widget traits
+<code>Widget</code>, <code>WidgetRef</code> or stateful versions of those. <code>Widget</code>'s render
+method simply calls <code>render_ref()</code> and then eats your widget. How rude! So
+lets look at the implementation of <code>WidgetRef</code>. Many of Ratatui's widgets
+follow this template:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">pub </span><span style="font-weight:bold;color:#e88731;">struct </span><span style="color:#f2bc8c;">WidgetFoo</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> A block to wrap the widget in
+</span><span style="color:#f2bc8c;">    </span><span style="color:#b483c8;">block</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">Option</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">Block</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt;&gt;</span><span style="color:#f2bc8c;">,
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Widget style
+</span><span style="color:#f2bc8c;">    </span><span style="color:#b483c8;">style</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Style,
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> widget specific fields
+</span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">impl </span><span style="color:#f2bc8c;">WidgetRef </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">WidgetFoo</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">&#39;</span><span style="color:#1ad1ff;">_</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        buf</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">set_style</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">, </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">block</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> inner </span><span style="color:#1ad1ff;">= </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">block</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">inner_if_some</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_widget_foo</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">inner</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>Of course, style and block are used in several other methods, the constructor
+<code>new</code> and the setter for <code>Block</code>. <code>Style</code> got its own trait, <code>Styled</code>).
+<code>Block</code> and <code>Style</code> act the same in each widget, is it necessary to repeat this
+code? In addition <code>Block</code> has its own <code>Style</code>, I assume that the widget needs
+it own version is because block is optional. I suspect <code>Block</code> has grown, it
+acquires more features as the alternative is to change all the
+widgets,is it still a block? What is it?</p>
+<p>Let's analyze the rendering of a widget. <code>Style</code> and <code>Block</code> are handled first,
+here is what happens:</p>
+<ol>
+<li>Style renders before widget renders</li>
+<li>Block renders before widget renders</li>
+<li>Block changes area before widget renders</li>
+</ol>
+<p>They both run some code before the widget is rendered, and <code>Block</code> changes the
+<code>area</code> parameter for the widget, but they don't change any other aspect
+of the widget. The widget doesn't need them. The inclusion of both is repetitive,
+leads to complexity and inflexibility.</p>
+<p>Let's ask the question “What is composed of what?”. Can we turn the composition
+inside out, include widgets in <code>Block</code> (and <code>Style</code> too), the
+second composition way:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="font-weight:bold;color:#e88731;">struct </span><span style="color:#f2bc8c;">Block</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">   </span><span style="color:#b483c8;">widget</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">Box</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">dyn WidgetRef</span><span style="color:#bcc2c3;">&gt;</span><span style="color:#f2bc8c;">,
+</span><span style="color:#f2bc8c;">   </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> other block fields
+</span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">impl </span><span style="color:#f2bc8c;">WidgetRef </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">Block</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">&#39;</span><span style="color:#1ad1ff;">_</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        buf</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">set_style</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">, </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_block</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> inner </span><span style="color:#1ad1ff;">= </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">inner_area</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">widget</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">inner</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>So <code>Block</code> becomes a wrapper of a widget and implements <code>Widget</code>, it
+modifies the input and/or the output of the contained widget. As
+it is a widget itself, it suddenly is possible to add two borders
+around the widget. Voilà! Now our widgets become like onions:
+<code>(Style(Block(Paragraph)))</code>.</p>
+<div align="center"> 
+<picture>
+  <source srcset="widget_onion.avif" type="image/avif">
+  <source srcset="widget_onion.webp" type="image/webp">
+  <img src="widget_onion.jpg" alt="A widget inside of an onion" class="photo w80">
+</picture>
+
+</div>
+<p>Oh, clever me, I just reinvented the <strong>Decorator Pattern</strong>:</p>
+<blockquote>
+<p><strong>Decorator</strong></p>
+<p><em>Intent</em></p>
+<p>Attach additional responsibilities to an object dynamically.
+Decorators provide a flexible alternative to subclassing for
+extending functionality.</p>
+<p>Also Known As Wrapper</p>
+<a class="citation" href="#ref-gamma1994">[Gamma et al., 1994]</a>
+</blockquote>
+<p>Luckily Rust doesn't suffer from subclassing, but having a
+dynamic, flexible way to extend functionality sure is nice to have and
+is what we need to solve modifying widgets. Indeed the Gang of Four use
+widgets as an example for the decorator pattern, and I wonder if the name comes
+from this use.</p>
+<p>The gang continues about decorators:</p>
+<blockquote>
+<p>Avoids feature-laden classes high up in the hierarchy. Decorator
+offers a pay-as-you-go approach to adding responsibilities.
+Instead of trying to support all foreseeable features in a complex,
+customizable class, you can define a simple class and add
+functionality incrementally with Decorator objects.
+Functionality can be composed from simple pieces.</p>
+<a class="citation" href="#ref-gamma1994">[Gamma et al., 1994]</a>
+</blockquote>
+<p>Hey, that complex, customizable class, that is the <code>Block</code> widget
+right there! And those simple pieces! Yummy! Gimme, gimme, gimme!</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_parsley.avif" type="image/avif">
+  <source srcset="garnish_parsley.webp" type="image/webp">
+  <img src="garnish_parsley.png" alt="Decorative image of garnish, a Parsley leaf" class="w20">
+</picture>
+
+<h2 id="garnishing">Garnishing</h2>
+</div>
+<p>Let's build decorators for our widgets. As they are Ratatui widgets,
+we are not going to simply decorate them, we are going to <em>garnish</em> them.
+I'd like to avoid implementing all the variations of the <code>Widget</code>
+trait. Here is a trait to modify widgets:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> A trait that can modify the rendering of a widget.
+</span><span style="color:#1ad1ff;">pub </span><span style="font-weight:bold;color:#e88731;">trait </span><span style="color:#f2bc8c;">RenderModifier </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Modifies the widget&#39;s rendering area.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Returns the adjusted area, typically reduced to account for borders, padding, or shadows.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Default implementation returns the input area unchanged.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect</span><span style="color:#bcc2c3;">) -&gt;</span><span style="color:#f2bc8c;"> Rect </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        area
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Executes before the widget is rendered.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Used for pre-rendering effects like setting background styles or drawing shadows.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Default implementation does nothing.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">_area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">_buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Executes after the widget is rendered.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Used for post-rendering effects like drawing titles over borders.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Default implementation does nothing.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">after_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">_area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">_buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>Basically the <code>RenderModifier</code> trait provides three ways that a garnish can
+modify <code>render</code> methods. The first two come from the current use of <code>Style</code>
+and <code>Block</code> in rendering widgets. The last method, <code>after_render</code>, is new.
+That is not something the <code>Block</code> widget does. Can you think of a useful
+Garnish that renders after the widget has been rendered?</p>
+<p>In a way I think the use of the term “decorator pattern” is a bit unfortunate
+as it implies a certain application. What we really doing is function
+composition using traits. And this is way more powerful than just decorating
+a widget with a border.</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_flower.avif" type="image/avif">
+  <source srcset="garnish_flower.webp" type="image/webp">
+  <img src="garnish_flower.png" alt="Decorative image of garnish, a flower" class="w20">
+</picture>
+
+<h2 id="garnished-widgets">Garnished Widgets</h2>
+</div>
+<p>Let's look again at the composition method. We need a way to combine a
+widget with the garnish. There is a problem with this, as I mentioned above the onion
+structure that we get, this recursive <code>struct</code>, has some downsides:
+the  widget and garnishes are neither easy to access, nor modify. Instead
+of creating this onion, what about the third way, creating a new type
+that wraps the widget and the garnishes? Can we create a <code>struct</code> that
+both wraps the widget and a <code>Vec</code> of garnishes? We would be able to
+easily access all applied garnishes. We would have all the ways of a
+vector to modify the garnishes and we would not need to implement
+all variations of <code>Widget</code> for each garnish, only the relevant methods of
+<code>RenderModifier</code>. I would like something like:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">pub </span><span style="font-weight:bold;color:#e88731;">struct </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">W</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">   </span><span style="color:#b483c8;">widget</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> W,
+</span><span style="color:#f2bc8c;">   </span><span style="color:#b483c8;">garnishes</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">Vec</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">RenderModifier</span><span style="color:#bcc2c3;">&gt;</span><span style="color:#f2bc8c;">,
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>Wait a minute! <code>RenderModifier</code> is a trait! No <code>Vec</code> for you!</p>
+<p>Well, we could use trait objects, but you know what happens with them: all your
+garnishes start looking the same and you can't tell lemon zest from
+parsley. Let's use an <code>enum</code> instead so we don't lose our garnishes...
+I mean types. To avoid writing the boiler plate for the <code>enum</code> I use the
+<code>nodyn!</code> macro provided by the <a href="/code/nodyn/">nodyn</a> crate
+<a class="citation" href="#ref-laranja2025-2">[Laranja, F., 2025-2]</a>
+,
+which also helps with this polymorphic <code>Vec</code> we need for our
+<code>GarnishedWidget</code>:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">derive_more</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Deref</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> DerefMut</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">nodyn</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">nodyn</span><span style="color:#1ad1ff;">! </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">#[</span><span style="color:#b483c8;">derive</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Debug</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Clone</span><span style="color:#bcc2c3;">)]
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">pub </span><span style="font-weight:bold;color:#e88731;">enum </span><span style="color:#f2bc8c;">Garnish&lt;&#39;a&gt; </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        Style</span><span style="color:#bcc2c3;">,
+</span><span style="color:#f2bc8c;">        Block</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt;,
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">impl </span><span style="color:#f2bc8c;">is_as;
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    impl RenderModifier </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect</span><span style="color:#bcc2c3;">) -&gt;</span><span style="color:#f2bc8c;"> Rect</span><span style="color:#bcc2c3;">;
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">after_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> A `Vec` of `Garnish` for applying multiple garnishes to widgets.
+</span><span style="color:#f2bc8c;">    vec Garnishes</span><span style="color:#bcc2c3;">;
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> A widget that wraps another widget with a vector of garnishes.
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> This struct implements `Deref` and `DerefMut` to the inner widget,
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> allowing you to access the original widget&#39;s methods while adding
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> garnish functionality.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">#[</span><span style="color:#b483c8;">vec</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">garnishes</span><span style="color:#bcc2c3;">)]
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">#[</span><span style="color:#b483c8;">derive</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Debug</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Deref</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> DerefMut</span><span style="color:#bcc2c3;">)]
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">pub </span><span style="font-weight:bold;color:#e88731;">struct </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">W</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">#[</span><span style="color:#b483c8;">deref</span><span style="color:#bcc2c3;">]
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">#[</span><span style="color:#b483c8;">deref_mut</span><span style="color:#bcc2c3;">]
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">pub </span><span style="color:#b483c8;">widget</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> W,
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>Note: <code>ratatui-garnish</code> also has a stateful version of
+<code>GarnishedWidget</code> for <code>StatefulWidget</code>.</p>
+<aside>
+<h1 id="polymorphism-with-enums">Polymorphism with enums</h1>
+<blockquote>
+<p>This is a perfectly good solution
+when our interchangeable items are a fixed set of types that we
+know when our code is compiled.
+<a class="citation" href="#ref-klabnik2025">[Klabnik et al., 2025]</a>
+</p>
+</blockquote>
+<p>Using enums has several advantages over trait objects, for example
+it prevents type erasure. It has its disadvantages too, such as
+the amount of boiler plate code it requires. The nodyn crate
+<a class="citation" href="#ref-laranja2025">[Laranja, F., 2025]</a>
+
+provides a macro that makes using enums for polymorphism easy.</p>
+</aside>
+<p>The <code>nodyn!</code> macro generates an <code>enum Garnish</code> which we use as an alternative to
+trait objects, the variants are the different garnishes we have:
+<code>Style</code> and <code>Block</code>. The macro generates the variant names for us, e.g.
+<code>Style</code> expands to <code>Style(Style)</code> and implements <code>From&lt;variant&gt;</code> and
+<code>TryInto&lt;Garnish&gt;</code> for easy conversions. With the <code>impl as_is</code>
+feature <code>nodyn</code> generates methods like <code>is_style</code> and
+<code>try_as_style</code>.</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> red_garnish</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Garnish </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Red</span><span style="color:#bcc2c3;">);
+</span><span style="color:#e88731;">assert!</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">red_garnish</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">is_style</span><span style="color:#bcc2c3;">());
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> red_style </span><span style="color:#1ad1ff;">=</span><span style="color:#f2bc8c;"> red_garnish</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">try_as_style_ref</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">unwrap</span><span style="color:#bcc2c3;">();
+</span><span style="color:#e88731;">assert_eq!</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">red_style</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">fg</span><span style="color:#bcc2c3;">, </span><span style="color:#e88731;">Some</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Red</span><span style="color:#bcc2c3;">));
+</span></code></pre>
+<p>The <code>impl RenderModifier</code> block contains the signatures from the
+<code>RenderModifier</code> trait. Using this <code>RenderModifier</code> gets implemented
+for <code>Garnish</code> by delegating to the variants.</p>
+<p>The line <code>vec Garnishes</code>, creates a wrapper around
+a <code>Vec&lt;Garnish&gt;</code> with delegated <code>Vec</code> methods and variant-specific
+utilities. It supports flexible insertion via <code>Into&lt;Garnish&gt;</code> and provides
+methods like <code>first_style</code>, <code>count_style</code>, and <code>all_style</code> for
+variant-specific access. The <code>garnishes!</code> macro is also generated
+for easy initialization. <code>Garnishes</code> is useful for garnishing
+several widgets with the same garnishes.</p>
+<p>The <code>#[vec(garnishes)]</code> attribute instructs nodyn to turn the
+<code>struct</code> that follows into a polymorphic <code>Vec</code> by adding a field
+<code>garnishes</code> with the type of <code>Vec&lt;Garnish&gt;</code>. I used the <a href="..">derive_more</a>
+crate
+<a class="citation" href="#ref-fennema2025">[Fennema, J., 2025]</a>
+,
+to derive <code>Deref</code> and <code>DerefMut</code>. The resulting <code>GarnishedWidget</code>
+acts like the widget it wraps and as a <code>Vec</code> of <code>Garnishes</code> as well. Now
+we can simply add garnishes by pushing them to the widget.</p>
+<p>Although <code>GarnishedWidget</code> is called a widget, it hasn't got
+the traits dude! Let's add:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">impl</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Widget </span><span style="color:#1ad1ff;">+ </span><span style="color:#e88731;">Clone</span><span style="color:#bcc2c3;">&gt;</span><span style="color:#f2bc8c;"> Widget </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">render</span><span style="color:#bcc2c3;">(</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> area </span><span style="color:#1ad1ff;">=</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">;
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">for</span><span style="color:#f2bc8c;"> g </span><span style="color:#1ad1ff;">in &amp;</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">garnish </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">            area </span><span style="color:#1ad1ff;">=</span><span style="color:#f2bc8c;"> g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">inner</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">for</span><span style="color:#f2bc8c;"> g </span><span style="color:#1ad1ff;">in &amp;</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">garnish </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">after_render</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">impl</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> WidgetRef </span><span style="color:#1ad1ff;">+ </span><span style="color:#e88731;">Clone</span><span style="color:#bcc2c3;">&gt;</span><span style="color:#f2bc8c;"> WidgetRef </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> area </span><span style="color:#1ad1ff;">=</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">;
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">for</span><span style="color:#f2bc8c;"> g </span><span style="color:#1ad1ff;">in &amp;</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">garnish </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">            area </span><span style="color:#1ad1ff;">=</span><span style="color:#f2bc8c;"> g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">inner</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">for</span><span style="color:#f2bc8c;"> g </span><span style="color:#1ad1ff;">in &amp;</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">garnish </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            g</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">after_render</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>As you can see the <code>after_render()</code>s are executed in the same order
+as the <code>before_render()</code>s, which makes it bit easier to reason about than
+the recursive <code>struct</code> from the basic decorator pattern. Let's finish off
+our <code>GarnishedWidget</code> by giving it a constructor, and
+as push doesn't sound like what a chef does to decorate a dish
+lets wrap that and make it chainable:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">impl</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">&gt; </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#f2bc8c;">, W</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> creates a new `garnishedwidget` with a single garnish.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">pub fn </span><span style="font-weight:bold;color:#9f60b9;">new</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">G</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">Into</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">Garnish</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt;&gt;&gt;(</span><span style="color:#b483c8;">widget</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> W, </span><span style="color:#b483c8;">garnish</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> G</span><span style="color:#bcc2c3;">) -&gt; </span><span style="color:#1ad1ff;">Self </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        </span><span style="color:#1ad1ff;">Self </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            widget</span><span style="color:#bcc2c3;">,
+</span><span style="color:#f2bc8c;">            garnishes</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">vec!</span><span style="color:#bcc2c3;">[</span><span style="color:#f2bc8c;">garnish</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">into</span><span style="color:#bcc2c3;">()],
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="font-style:italic;color:#bcc2c3;">///</span><span style="font-style:italic;color:#869293;"> Adds an additional garnish to the widget.
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">pub fn </span><span style="font-weight:bold;color:#9f60b9;">garnish</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">G</span><span style="color:#bcc2c3;">: </span><span style="color:#e88731;">Into</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#f2bc8c;">Garnish</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt;&gt;&gt;(</span><span style="color:#1ad1ff;">mut </span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">garnish</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> G</span><span style="color:#bcc2c3;">) -&gt; </span><span style="color:#1ad1ff;">Self </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">push</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">garnish</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p>Instead of composing <code>Style</code>, <code>Block</code> and widgets by including one within another
+I created a new <code>struct</code> to combined them all: a <strong>flat decorator</strong>.
+By using a <code>enum</code> instead of trait objects, type erasure is avoided.
+This setup is a bit more complex than the basic decorator, but this
+initial complexity and the leverage of traits
+makes the subsequent implementation of garnishes a breeze.</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_cheese.avif" type="image/avif">
+  <source srcset="garnish_cheese.webp" type="image/webp">
+  <img src="garnish_cheese.png" alt="Decorative image of garnish, grated cheese" class="w20">
+</picture>
+
+<h2 id="garnishable-widgets">Garnishable Widgets</h2>
+</div>
+<p>To make garnishing widgets even easier, I wrote an extension
+traits for for the widget traits that adds a <code>garnish</code> method to
+any widget. That method turns the widget in a <code>GarnishedWidget</code>
+and adds a garnish.</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Style</span><span style="color:#bcc2c3;">}, </span><span style="color:#f2bc8c;">text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui_garnish</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">GarnishableWidget</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> RenderModifier</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Hello, World!</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Blue</span><span style="color:#bcc2c3;">))   </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Background for padded area
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">))             </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Padding on left and right
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Red</span><span style="color:#bcc2c3;">))    </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Background for next padded area
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">vertical</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">))               </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Padding on top and bottom
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">White</span><span style="color:#bcc2c3;">)); </span><span style="font-style:italic;color:#bcc2c3;">//</span><span style="font-style:italic;color:#869293;"> Background for the line
+</span></code></pre>
+<p>As you can see with <code>ratatui-garnish</code>, you can easily turn the
+three blockless text widgets from Ratatui <code>Text</code>, <code>Line</code> and <code>Span</code>, into
+full widgets with borders, padding &amp; titles.</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_basil.avif" type="image/avif">
+  <source srcset="garnish_basil.webp" type="image/webp">
+  <img src="garnish_basil.png" alt="Decorative image of garnish, Basil leaves" class="w30">
+</picture>
+
+<h2 id="garnishes">Garnishes</h2>
+</div>
+<p>Now we start implementing garnishes, in the example above I used <code>Style</code> and <code>Block</code> as
+variants of the <code>Garnish</code> enum, so <strong>ratatui-garnish</strong> offers the same functionality
+as Ratatui, we implement <code>Garnish</code> for both:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">impl </span><span style="color:#f2bc8c;">Garnish </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">Style </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        buf</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">set_style</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">, </span><span style="color:#1ad1ff;">*</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">impl</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt;</span><span style="color:#f2bc8c;"> Garnish </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">Block</span><span style="color:#bcc2c3;">&lt;</span><span style="color:#80e5ff;">&#39;a</span><span style="color:#bcc2c3;">&gt; {
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect</span><span style="color:#bcc2c3;">) -&gt;</span><span style="color:#f2bc8c;"> Rect </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">inner</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">before_render</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect, </span><span style="color:#b483c8;">buf</span><span style="color:#bcc2c3;">: </span><span style="color:#1ad1ff;">&amp;mut</span><span style="color:#f2bc8c;"> Buffer</span><span style="color:#bcc2c3;">) {
+</span><span style="color:#f2bc8c;">        </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">render_ref</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">area</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> buf</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<p><code>Block</code> can do lots of things: it has its own <code>Style</code>, it can render a border with
+titles and add padding. I like to split this up in light weight, simpler garnishes,
+which can than easily be combined in all kind of ways. <code>Style</code>
+we already have. For padding we can use the <code>Padding</code> <code>struct</code> that <code>Block</code> uses:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">;
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">impl </span><span style="color:#f2bc8c;">Garnish </span><span style="color:#1ad1ff;">for </span><span style="color:#f2bc8c;">Padding </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">    </span><span style="color:#1ad1ff;">fn </span><span style="font-weight:bold;color:#9f60b9;">modify_area</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#b483c8;">self</span><span style="color:#f2bc8c;">, </span><span style="color:#b483c8;">area</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> Rect</span><span style="color:#bcc2c3;">) -&gt;</span><span style="color:#f2bc8c;"> Rect </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">        Rect </span><span style="color:#bcc2c3;">{
+</span><span style="color:#f2bc8c;">            x</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">x </span><span style="color:#1ad1ff;">+ </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">left</span><span style="color:#bcc2c3;">,
+</span><span style="color:#f2bc8c;">            y</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">y </span><span style="color:#1ad1ff;">+ </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">,
+</span><span style="color:#f2bc8c;">            width</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">width</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">saturating_sub</span><span style="color:#bcc2c3;">(</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">left </span><span style="color:#1ad1ff;">+ </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">right</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">            height</span><span style="color:#bcc2c3;">:</span><span style="color:#f2bc8c;"> area</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">height</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">saturating_sub</span><span style="color:#bcc2c3;">(</span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">top </span><span style="color:#1ad1ff;">+ </span><span style="color:#80e5ff;">self</span><span style="color:#bcc2c3;">.</span><span style="color:#f2bc8c;">bottom</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">}
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">}
+</span><span style="color:#bcc2c3;">}
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="garnish_jullien1.avif" type="image/avif">
+  <source srcset="garnish_jullien1.webp" type="image/webp">
+  <img src="garnish_jullien1.png" alt="Decorative image of garnish, vegetable jullien" class="w30">
+</picture>
+
+<h2 id="available-garnishes">Available garnishes</h2>
+</div>
+<p>Instead of <code>Block</code>, <code>ratatui-garnish</code> uses many simple garnishes
+to provide similar functionality. As this article's focus is on
+the design pattern used, I won't go over the implementation of
+all garnishes, but give a summary of the garnishes included in
+version 0.1.0 (more garnishes are planned).</p>
+<h3 id="borders">Borders</h3>
+<ul>
+<li>Standard: <code>PlainBorder</code>, <code>RoundedBorder</code>, <code>DoubleBorder</code>, <code>ThickBorder</code></li>
+<li>Dashed variants: <code>DashedBorder</code>, <code>RoundedDashedBorder</code>, <code>ThickDashedBorder</code>,</li>
+<li>Custom: <code>CharBorder</code> (single character, e.g., <code>****</code>), <code>CustomBorder</code> (fully customizable character set)</li>
+<li>Specialty: <code>QuadrantInsideBorder</code>, <code>QuadrantOutsideBorder</code>, <code>FatInsideBorder</code>, <code>FatOutsideBorder</code></li>
+</ul>
+<h3 id="titles">Titles</h3>
+<ul>
+<li>Horizontal: <code>Title&lt;Top&gt;</code> (over top border), <code>Title&lt;Bottom&gt;</code> (over bottom border), <code>Title&lt;Above&gt;</code> (reserves space above), <code>Title&lt;Below&gt;</code> (reserves space below)</li>
+<li>Vertical: <code>Title&lt;Left&gt;</code> (over left border), <code>Title&lt;Right&gt;</code> (over right border), <code>Title&lt;Before&gt;</code> (reserves space left), <code>Title&lt;After&gt;</code> (reserves space right)</li>
+</ul>
+<h3 id="shadows">Shadows</h3>
+<ul>
+<li><code>Shadow</code> (light <code>░</code>, medium <code>▒</code>, dark <code>▓</code>, or full <code>█</code> shades with full-character offsets)</li>
+<li><code>HalfShadow</code> (full <code>█</code> or quadrant characters with half-character offsets)</li>
+</ul>
+<h3 id="built-in-ratatui-support">Built-in Ratatui Support</h3>
+<ul>
+<li><code>Style</code> (background colors, text styling)</li>
+<li><code>Padding</code> (spacing around the widget)</li>
+</ul>
+<p>Have a look at the
+source of <strong>ratatui-garnish</strong> to look at how easy it is to
+implement a garnish, implement one or more of the methods from
+<code>RenderModifier</code>, that's all! And if you wondered about a use of <code>after_render</code>,
+have a look at the <code>Title&lt;Top&gt;</code> garnish from the title module, it renders
+<em>over</em> the top row of the widgets <code>Area</code>.</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_mint.avif" type="image/avif">
+  <source srcset="garnish_mint.webp" type="image/webp">
+  <img src="garnish_mint.png" alt="Decorative image of garnish, Mint leaves" class="w25">
+</picture>
+
+<h2 id="garnishes-1">Garnishes</h2>
+</div>
+<p>There are quite a number of garnishes! To make it easy to apply
+the same set of garnishes to multiple widgets, <code>ratatui-garnish</code> has a
+special <code>Vec&lt;Garnish&gt;</code> called <code>Garnishes</code>. As <code>GarnishedWidget</code>
+also acts as a <code>Vec&lt;Garnish&gt;</code> you can use its <code>extend_from_slice</code>
+and <code>extend</code> methods to add <code>Garnishes</code>:</p>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui_garnish</span><span style="color:#bcc2c3;">::{
+</span><span style="color:#f2bc8c;"> GarnishedWidget</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> GarnishableWidget</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> RenderModifier</span><span style="color:#bcc2c3;">,
+</span><span style="color:#f2bc8c;"> title</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Title</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Top</span><span style="color:#bcc2c3;">},
+</span><span style="color:#f2bc8c;"> border</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">DoubleBorder</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> garnishes</span><span style="color:#bcc2c3;">,
+</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">text</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">widgets</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Padding</span><span style="color:#bcc2c3;">};
+</span><span style="color:#1ad1ff;">use </span><span style="color:#f2bc8c;">ratatui</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">style</span><span style="color:#bcc2c3;">::{</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Style</span><span style="color:#bcc2c3;">,</span><span style="color:#f2bc8c;"> Modifier</span><span style="color:#bcc2c3;">};
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let</span><span style="color:#f2bc8c;"> garnishes </span><span style="color:#1ad1ff;">= </span><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Blue</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    DoubleBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">uniform</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">White</span><span style="color:#bcc2c3;">),
+</span><span style="color:#bcc2c3;">];
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">GarnishedWidget</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">from</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">First widget</span><span style="color:#bcc2c3;">&quot;));
+</span><span style="color:#f2bc8c;">widget</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">extend_from_slice</span><span style="color:#bcc2c3;">(</span><span style="color:#1ad1ff;">&amp;</span><span style="color:#f2bc8c;">garnishes</span><span style="color:#bcc2c3;">);
+</span><span style="color:#f2bc8c;">
+</span><span style="color:#1ad1ff;">let mut</span><span style="color:#f2bc8c;"> other_widget </span><span style="color:#1ad1ff;">= </span><span style="color:#f2bc8c;">Line</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">raw</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Other widget</span><span style="color:#bcc2c3;">&quot;)
+</span><span style="color:#f2bc8c;"> </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">garnish</span><span style="color:#bcc2c3;">(
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Top</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">Second</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Green</span><span style="color:#bcc2c3;">))
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">margin</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">));
+</span><span style="color:#f2bc8c;">other_widget</span><span style="color:#bcc2c3;">.</span><span style="color:#e88731;">extend</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">garnishes</span><span style="color:#bcc2c3;">);
+</span></code></pre>
+<p>A serializable <code>Garnishes</code> would make it easy
+to make Ratatui applications themeable.
+Regrettably I could not make <code>Garnishes</code> serializable with serde
+as the <code>Title</code> garnishes are a wrapper around
+<code>ratatui::text::Line</code> which doesn't implement <code>Serialize</code> and
+<code>Deserialize</code>.</p>
+<div align="center">
+<picture>
+  <source srcset="garnish_roquefort.avif" type="image/avif">
+  <source srcset="garnish_roquefort.webp" type="image/webp">
+  <img src="garnish_roquefort.png" alt="Decorative image of garnish, crumbled Roquefort" class="w45">
+</picture>
+
+<h2 id="recipes">Recipes</h2>
+</div>
+<p>Here are some examples with screenshots of what you can do with ratatui-garnish.
+I only show the garnishes used, the complete code can
+be found in the examples directory in the github repo.</p>
+<h3 id="padding">Padding</h3>
+<p>This example shows a combination of <code>Style</code> and <code>Padding</code>
+garnishes on a <code>ratatui::text::Line</code> widget.</p>
+<p>To run this example:</p>
+<pre data-lang="bash" style="background-color:#00141a;color:#eda15f;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="font-weight:bold;color:#b483c8;">git</span><span style="font-weight:bold;color:#9f60b9;"> clone http://github.com/franklaranja/ratatui-garnish
+</span><span style="font-weight:bold;color:#e88731;">cd</span><span style="font-weight:bold;color:#9f60b9;"> ratatui-garnish
+</span><span style="font-weight:bold;color:#b483c8;">cargo</span><span style="font-weight:bold;color:#9f60b9;"> run</span><span style="font-weight:bold;color:#bcc2c3;"> --</span><span style="font-weight:bold;color:#b483c8;">example</span><span style="font-weight:bold;color:#9f60b9;"> padding
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="padding.avif" type="image/avif">
+  <source srcset="padding.webp" type="image/webp">
+  <img src="padding.jpg" alt="Screenshot of padding example" class="w80">
+</picture>
+
+</div>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE400</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">vertical</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE600</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE100</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">left</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE200</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE300</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">right</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE400</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">bottom</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE500</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">left</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE600</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE700</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">right</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE800</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">bottom</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE900</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">
+</span></code></pre>
+<h3 id="borders-1">Borders</h3>
+<p>You can add any combination of borders to a widget, in this
+example it is again a <code>ratatui::text::Line</code>.</p>
+<p>To run this example:</p>
+<pre data-lang="bash" style="background-color:#00141a;color:#eda15f;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="font-weight:bold;color:#b483c8;">cargo</span><span style="font-weight:bold;color:#9f60b9;"> run</span><span style="font-weight:bold;color:#bcc2c3;"> --</span><span style="font-weight:bold;color:#b483c8;">example</span><span style="font-weight:bold;color:#9f60b9;"> borders
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="borders.avif" type="image/avif">
+  <source srcset="borders.webp" type="image/webp">
+  <img src="borders.jpg" alt="Screenshot of borders example" class="w80">
+</picture>
+
+</div>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Color</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">Rgb</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">220</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">0</span><span style="color:#bcc2c3;">, </span><span style="color:#f2bc8c;">0</span><span style="color:#bcc2c3;">)),
+</span><span style="color:#f2bc8c;">    CustomBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">new</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BorderSet</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">dashed</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">corners</span><span style="color:#bcc2c3;">(&#39;</span><span style="color:#44d581;">♥</span><span style="color:#bcc2c3;">&#39;)),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">proportional</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    CharBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">new</span><span style="color:#bcc2c3;">(&#39;</span><span style="color:#44d581;">♥</span><span style="color:#bcc2c3;">&#39;).</span><span style="color:#e88731;">borders</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">Borders</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">TOP </span><span style="color:#1ad1ff;">| </span><span style="color:#f2bc8c;">Borders</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">BOTTOM</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">GREEN700</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    PlainBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">GREEN600</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    PlainBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">GREEN500</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    PlainBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#bcc2c3;">];
+</span></code></pre>
+<h3 id="titles-1">Titles</h3>
+<p>This example shows the title garnishes, notice the difference
+between titles that reserve space (the triangles) and those
+that render over the border.</p>
+<p>To run this example:</p>
+<pre data-lang="bash" style="background-color:#00141a;color:#eda15f;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="font-weight:bold;color:#b483c8;">cargo</span><span style="font-weight:bold;color:#9f60b9;"> run</span><span style="font-weight:bold;color:#bcc2c3;"> --</span><span style="font-weight:bold;color:#b483c8;">example</span><span style="font-weight:bold;color:#9f60b9;"> titles
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="titles.avif" type="image/avif">
+  <source srcset="titles.webp" type="image/webp">
+  <img src="titles.jpg" alt="Screenshot of titles example" class="w80">
+</picture>
+
+</div>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Above</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">▲</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE500</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Below</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">▼</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE500</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Before</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">◀</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">PURPLE500</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">After</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;">▶</span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">GREEN500</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">horizontal</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">1</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Top</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;"> top </span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE200</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Bottom</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;"> bottom </span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE200</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Left</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;"> left </span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">PURPLE200</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Right</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(&quot;</span><span style="color:#44d581;"> right </span><span style="color:#bcc2c3;">&quot;, </span><span style="color:#f2bc8c;">Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">GREEN200</span><span style="color:#bcc2c3;">)).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    RoundedBorder</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">top</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">4</span><span style="color:#bcc2c3;">),
+</span><span style="color:#bcc2c3;">];
+</span></code></pre>
+<h3 id="shadow">Shadow</h3>
+<p>Here we add a <code>Title::&lt;Above&gt;</code> and a <code>HalfShadow</code> to a
+<code>ratatui::widgets::Paragraph</code> widget.</p>
+<p>To run this example:</p>
+<pre data-lang="bash" style="background-color:#00141a;color:#eda15f;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="font-weight:bold;color:#b483c8;">cargo</span><span style="font-weight:bold;color:#9f60b9;"> run</span><span style="font-weight:bold;color:#bcc2c3;"> --</span><span style="font-weight:bold;color:#b483c8;">example</span><span style="font-weight:bold;color:#9f60b9;"> shadow
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="shadow.avif" type="image/avif">
+  <source srcset="shadow.webp" type="image/webp">
+  <img src="shadow.jpg" alt="Screenshot of shadow example" class="w80">
+</picture>
+
+</div>
+<pre data-lang="rust" style="background-color:#00141a;color:#eda15f;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#e88731;">garnishes!</span><span style="color:#bcc2c3;">[
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE600</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    HalfShadow</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Title</span><span style="color:#bcc2c3;">::&lt;</span><span style="color:#f2bc8c;">Above</span><span style="color:#bcc2c3;">&gt;::</span><span style="color:#f2bc8c;">styled</span><span style="color:#bcc2c3;">(
+</span><span style="color:#f2bc8c;">        </span><span style="color:#bcc2c3;">&quot;</span><span style="color:#44d581;">From </span><span style="color:#f2bc8c;">\&quot;</span><span style="color:#44d581;">The Rust Programming Language</span><span style="color:#f2bc8c;">\&quot;</span><span style="color:#bcc2c3;">&quot;,
+</span><span style="color:#f2bc8c;">        Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE400</span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">BLUE900</span><span style="color:#bcc2c3;">)
+</span><span style="color:#f2bc8c;">    </span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">centered</span><span style="color:#bcc2c3;">(),
+</span><span style="color:#f2bc8c;">    Style</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">default</span><span style="color:#bcc2c3;">().</span><span style="color:#e88731;">bg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE100</span><span style="color:#bcc2c3;">).</span><span style="color:#e88731;">fg</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">ORANGE700</span><span style="color:#bcc2c3;">),
+</span><span style="color:#f2bc8c;">    Padding</span><span style="color:#bcc2c3;">::</span><span style="color:#f2bc8c;">proportional</span><span style="color:#bcc2c3;">(</span><span style="color:#f2bc8c;">2</span><span style="color:#bcc2c3;">),
+</span><span style="color:#bcc2c3;">];
+</span></code></pre>
+<div align="center">
+<picture>
+  <source srcset="garnish_almonds.avif" type="image/avif">
+  <source srcset="garnish_almonds.webp" type="image/webp">
+  <img src="garnish_almonds.png" alt="Decorative image of garnish, Almonds" class="w35">
+</picture>
+
+<h2 id="compositions-compared">Compositions compared</h2>
+</div>
+<p>In this article we looked at three way to compose to types of
+structs (A and B) in Rust,</p>
+<ol>
+<li>Include struct B in struct A. (Style &amp; Block in ratatui Widgets)</li>
+<li>Include struct A in struct B. (Traditional decorator pattern)</li>
+<li>Include struct A and B in struct C. (ratatui-garnish)</li>
+</ol>
+<div class="struct diagram">
+    <div class="struct-name">Paragraph</div>
+    <ul class="fields">
+        <li class="option-field">
+            <div class="field-name">block</div>
+            <div class="struct">
+                <div class="struct-name">Block</div>
+                <ul class="fields">
+                    <li class="vec-field">
+                        <div class="field-name">titles</div>
+                        <ul class="tuple">
+                            <li class="option-field">
+                                <div class="struct">
+                                    <div class="struct-name">Position</div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="struct">
+                                    <div class="struct-name">Line</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_alignment</div>
+                        <div class="struct">
+                            <div class="struct-name">Alignment</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_position</div>
+                        <div class="struct">
+                            <div class="struct-name">Position</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">borders</div>
+                        <div class="struct">
+                            <div class="struct-name">Borders</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">border_style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">border_set</div>
+                        <div class="struct">
+                            <div class="struct-name">border::Set</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">padding</div>
+                        <div class="struct">
+                            <div class="struct-name">Padding</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">style</div>
+            <div class="struct">
+                <div class="struct-name">Style</div>
+            </div>
+        </li>
+        <li class="option-field">
+            <div class="field-name">wrap</div>
+            <div class="struct">
+                <div class="struct-name">Wrap<div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">text</div>
+            <div class="struct">
+                <div class="struct-name">Text</div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">scroll</div>
+            <div class="struct">
+                <div class="struct-name">Scroll</div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">alignment</div>
+            <div class="struct">
+                <div class="struct-name">Alignment</div>
+            </div>
+        </li>
+    </ul>
+</div>
+<h3 id="decorator-pattern-in-rust">Decorator pattern in Rust</h3>
+<p>In Rust the decorator pattern consists of a trait, objects
+implementing the trait and wrappers (decorators) modifying
+the trait. The decorators typically use either generics <a class="citation" href="#ref-snoek2023">[Snoek, I., 2023]</a>
+
+or trait objects <a class="citation" href="#ref-lpxxn2025">[lpxxn, 2025]</a>
+ and green tea , to wrap the objects.</p>
+<p>See <a class="citation" href="#ref-drysdale2024">[Drysdale, D., 2024]</a>
+ for a comparison of generics with
+trait objects.</p>
+<div class="struct diagram">
+    <div class="struct-name">Style</div>
+    <ul class="fields">
+        <li><div class="field-name">style fields...</div></li>
+        <li class="trait-object-field">
+            <div class="field-name">widget</div>
+            <div class="struct">
+                <div class="struct-name">Border</div>
+                <ul class="fields">
+                    <li><div class="field-name">border fields...</div></li>
+                    <li class="trait-object-field">
+                        <div class="field-name">widget</div>
+                        <div class="struct">
+                            <div class="struct-name">Padding</div>
+                            <ul class="fields">
+                                <li><div class="field-name">padding fields...</div></li>
+                                <li class="trait-object-field">
+                                    <div class="field-name">widget</div>
+                                    <div class="struct">
+                                        <div class="struct-name">Paragraph</div>
+                                        <ul class="fields">
+                                            <li class="option-field">
+                                                <div class="field-name">wrap</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Wrap<div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">text</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Text</div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">scroll</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Scroll</div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">alignment</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Alignment</div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
+<div class="struct diagram">
+    <div class="struct-name">GarnishedWidget</div>
+    <ul class="fields">
+        <li class="generic-field">
+            <div class="field-name">widget</div>
+            <div class="struct">
+                <div class="struct-name">Paragraph</div>
+                <ul class="fields">
+                    <li class="option-field">
+                        <div class="field-name">wrap</div>
+                        <div class="struct">
+                            <div class="struct-name">Wrap<div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">text</div>
+                        <div class="struct">
+                            <div class="struct-name">Text</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">scroll</div>
+                        <div class="struct">
+                            <div class="struct-name">Scroll</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">alignment</div>
+                        <div class="struct">
+                            <div class="struct-name">Alignment</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="vec-field">
+            <div class="field-name">garnishes</div>
+            <div class="enum">
+                <div class="enum-name">Garnish</div>
+                <ul class="variants">
+                    <li>
+                        <div class="variant-name">Style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Border</div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Title</div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Padding</div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
+<div align="center"><img src="garnish_lemon.png" alt="Lemon curl"  width="150"/>
+<h2 id="flat-decorator-pattern">Flat Decorator Pattern</h2>
+</div>
+<p>The flat decorator pattern that I described here seems a useful composition
+pattern for Rust. When implemented using enum polymorphism, it offers a type-safe,
+flexible and dynamic solution. Being capable of more than decorating widgets,
+maybe composite trait modifier is a better name for this powerful pattern. The closest
+pattern that I could find in Rust is the middleware pattern used by Axum
+<a class="citation" href="#ref-tokio2025">[Tokio Developers, 2025]</a>
+,
+which is based on closures.</p>
+<p>When you find good use for this pattern I would like to hear about it!</p>
+<section role="doc-bibliography">
+<div align="center"><img src="garnish_chives.png" alt="Chives"  width="150"/>
+<h2 id="references">References</h2>
+</div>
+<ul>
+<li>
+  <div class="reference" id="ref-drysdale2024">
+      <span class="ref-authors">Drysdale, D.</span>, <span class="ref-year">2024</span>. 
+      <span class="ref-title">Effective Rust: 35 Specific Ways to Improve Your Rust Code</span>.
+      
+          O’Reilly Media.
+      
+      
+          [Chapter 2. Traits]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-fennema2025">
+      <span class="ref-authors">Fennema, J.</span>, <span class="ref-year">2025</span>. 
+      <span class="ref-title">derive_more</span>.
+      
+          Rust crate, <a href="https://crates.io/crates/derive_more" class="ref-link">https://crates.io/crates/derive_more</a>.
+      
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-gamma1994">
+      <span class="ref-authors">Gamma, E., Helm, R., Johnson, R., & Vlissides, J.</span>, <span class="ref-year">1994</span>. 
+      <span class="ref-title">Design Patterns: Elements of Reusable Object-Oriented Software</span>.
+      
+          Addison-Wesley.
+      
+      
+          [Defines the traditional decorator pattern]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-klabnik2025">
+      <span class="ref-authors">Klabnik, S., Nichols, C., & Krycho, C.</span>, <span class="ref-year">2025</span>. 
+      <span class="ref-title">The Rust Programming Language</span>.
+      
+          <a href="http://doc.rust-lang.org/book/ch18-02-trait-objects.html" class="ref-link">http://doc.rust-lang.org/book/ch18-02-trait-objects.html</a>.
+      
+      
+          [18.2 Using Trait Objects That Allow for Values of Different Types]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-laranja2025-1">
+      <span class="ref-authors">Laranja, F.</span>, <span class="ref-year">2025-1</span>. 
+      <span class="ref-title">ratatui-garnish</span>.
+      
+          Rust crate, <a href="https://crates.io/crates/ratatui-garnish" class="ref-link">https://crates.io/crates/ratatui-garnish</a>.
+      
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-laranja2025-2">
+      <span class="ref-authors">Laranja, F.</span>, <span class="ref-year">2025-2</span>. 
+      <span class="ref-title">nodyn</span>.
+      
+          Rust crate, <a href="https://crates.io/crates/nodyn" class="ref-link">https://crates.io/crates/nodyn</a>.
+      
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-lpxxn2025">
+      <span class="ref-authors">lpxxn</span>, <span class="ref-year">2025</span>. 
+      <span class="ref-title">Rust Design Patterns</span>.
+      
+          <a href="https://github.com/lpxxn/rust-design-pattern" class="ref-link">https://github.com/lpxxn/rust-design-pattern</a>.
+      
+      
+          [Rust decorator pattern using trait objects]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-matthews2022">
+      <span class="ref-authors">Matthews, B.</span>, <span class="ref-year">2022</span>. 
+      <span class="ref-title">Code like a Pro in Rust</span>.
+      
+          Manning.
+      
+      
+          [10.5 Struct tagging.]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-ratatui2023">
+      <span class="ref-authors">Ratatui Developers</span>, <span class="ref-year">2023</span>. 
+      <span class="ref-title">Ratatui: A Rust crate for cooking up Terminal User Interfaces</span>.
+      
+          <a href="https://ratatui.rs/" class="ref-link">https://ratatui.rs/</a>.
+      
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-snoek2023">
+      <span class="ref-authors">Snoek, I.</span>, <span class="ref-year">2023</span>. 
+      <span class="ref-title">The Decorator pattern: an easy way to add functionality</span>.
+      
+          <a href="https://www.hackingwithrust.net/2023/06/03/the-decorator-pattern-an-easy-way-to-add-functionality/" class="ref-link">https://www.hackingwithrust.net/2023/06/03/the-decorator-pattern-an-easy-way-to-add-functionality/</a>.
+      
+      
+          [Rust decorator pattern using generics]
+      
+  </div>
+</li>
+<li>
+  <div class="reference" id="ref-tokio2025">
+      <span class="ref-authors">Tokio Developers</span>, <span class="ref-year">2025</span>. 
+      <span class="ref-title">axum</span>.
+      
+          Rust crate, <a href="https://crates.io/crates/axum" class="ref-link">https://crates.io/crates/axum</a>.
+      
+      
+  </div>
+</li>
+</ul>
+</section>
+
+        </section>
+    </main>
+
+    <footer>
+      <picture class="flourish">
+         <source srcset="/images/flourish.avif" type="image/avif">
+         <source srcset="/images/flourish.webp" type="image/webp">
+         <img src="/images/flourish.png" alt="flourish with lots of curls">
+      </picture>
+
+      <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
+
+      <p>
+        <a href="/articles">articles</a>
+        | <a href="/code">code</a>
+        | <a href="/contact">contact</a>
+        | <a href="/about">about</a>
+      </p>
+      
+      <p>&copy;2025 <a href="/about/">Frank Laranja</a>
+    <footer>
+</body>
+</html>

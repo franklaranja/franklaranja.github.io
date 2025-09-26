@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalabl
+e=yes">
+    <title>
+      
+      Get in Touch | 
+      Laranja's Web Shop
+    </title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+    
+    <header>
+        <div class="hero">
+            <picture>
+               <source srcset="/images/menu-forge.avif" type="image/avif">
+               <source srcset="/images/menu-forge.webp" type="image/webp">
+               <img src="/images/menu-forge.jpg" alt="A red hot gear with a 'R' being put in water">
+            </picture>
+            <nav class="menu">
+                <a href="/articles" class="nav-button">Articles</a>
+                <a href="/code" class="nav-button">Code</a>
+                <a href="/contact" class="nav-button selected">Contact</a>
+                <a href="/about" class="nav-button">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+        </div>
+    </header>
+    <main>
+        <section>
+          <h1>Get in Touch</h1>
+
+          <form id="contactform" aria-label="Contact Form" novalidate>
+          <div id="form-message" class="form-message" role="status"></div>
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" data-error="Please enter your name" id="name" name="name" placeholder="Your name" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" data-error="Please enter a valid email address" id="email" name="email" placeholder="Your email" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject</label>
+              <input type="text" data-error="Please enter the subject of your message " id="subject" name="subject" placeholder="Subject" required aria-required="true">
+              <span class="error-message" aria-live="polite"></span>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" data-error="Please enter a message" name="message" placeholder="Your message" rows="5" required aria-required="true"></textarea>
+              <span class="error-message" aria-live="polite"></span>
+            </div>
+            <button type="submit" class="cta-button">Send Message</button>
+          </form>
+          
+        </section>
+    </main>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+(function() {
+  emailjs.init("KwjQcgmVGVcPNI0xf");
+})();
+
+window.onload = function() {
+  const form = document.querySelector("form");
+
+  function validateField(field) {
+    const errorMessage = field.parentElement.querySelector('.error-message');
+    if (!field.validity.valid) {
+      errorMessage.textContent = field.dataset.error || "This field is required";
+      return false;
+    }
+
+    errorMessage.textContent = "";
+    return true;
+  }
+
+  form.querySelectorAll('input, textarea').forEach( input => {
+    input.addEventListener("blur", () => {
+      validateField(input);
+    });
+  });
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    let isValid = true;
+
+    const fields = form.querySelectorAll('input, textarea');
+
+    fields.forEach( field => {
+      const fieldValid = validateField(field);
+      if (!fieldValid) {
+        isValid = false;
+
+      }
+    });
+
+    const formMessage = document.getElementById('form-message');
+    formMessage.classList.remove('success', 'error');
+    if (isValid) { 
+      formMessage.textContent = 'Sending...';
+      emailjs.sendForm('service_xu6jys8', 'template_wgehxyl', this)
+        .then(() => {
+          formMessage.textContent = 'Message sent, thanks!';
+          formMessage.classList.add('success');
+          this.reset();
+          setTimeout(() => {
+            formMessage.textContent = '';
+            formMessage.classList.remove('success');
+          }, 5000);
+        }, (error) => {
+          formMessage.textContent = 'Failed to send message. Please try again.';
+          formMessage.classList.add('error');
+          console.error('EmailJS Error:', error);
+        });
+    } else {
+      formMessage.classList.add('error');
+      formMessage.textContent = 'Please fill in all fields';
+      form.querySelector(':invalid').focus();
+    }
+  });
+}
+</script>
+
+    <footer>
+      <picture class="flourish">
+         <source srcset="/images/flourish.avif" type="image/avif">
+         <source srcset="/images/flourish.webp" type="image/webp">
+         <img src="/images/flourish.png" alt="flourish with lots of curls">
+      </picture>
+
+      <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
+
+      <p>
+        <a href="/articles">articles</a>
+        | <a href="/code">code</a>
+        | <a href="/contact">contact</a>
+        | <a href="/about">about</a>
+      </p>
+      
+      <p>&copy;2025 <a href="/about/">Frank Laranja</a>
+    <footer>
+</body>
+</html>
