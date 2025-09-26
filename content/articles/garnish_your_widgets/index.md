@@ -11,7 +11,7 @@ summary = "This article presents a novel \"flat decorator\" pattern that address
 
 <div align="center">
 
-<img src="garnish_rosemary.png" alt="Rosemary sprig"  class="w20"/>
+{{ picture(src="garnish_rosemary", ext="png", alt="Decorative image of Rosemary garnish", class="w20") }}
 
 *Flexible, dynamic and type-safe composition in Rust*
 
@@ -38,14 +38,16 @@ construction. I don't see good reasons for changing the visibility of public
 items, it sure is inconvenient and not user friendly.
 
 To scratch the itch, I wrote a library that doesn't require widgets to contain
-`Style` and `Block` or even know about them. As a consequence it makes it easier
+`Style` and `Block` or even know about them. As a consequence, it makes it easier
 to write widgets and new ways to modify widgets: **ratatui-garnish**
 {{ cite(authors="Laranja, F.", year="2025-1", id="ref-laranja2025-1") }}.
 It uses a flexible,
 dynamic and type-safe composition pattern for Rust. I found the result interesting
-and so wrote this article about it, I hope you find it interesting too!
+and so wrote this article about it. I hope you find it interesting too!
 
-<div align="center"><img src="garnish_radish.png" alt="Radish slices"  width="150"/>
+<div align="center">
+
+{{ picture(src="garnish_croutons", ext="png", alt="Decorative image of croutons garnish", class="w40") }}
 
 ## Widgets, Styles and Blocks
 
@@ -53,7 +55,7 @@ and so wrote this article about it, I hope you find it interesting too!
 
 A widget in Ratatui is something that implements one of the Widget traits
 `Widget`, `WidgetRef` or stateful versions of those. `Widget`'s render
-method simply calls `render_ref()` and then eats your widget, how rude! So 
+method simply calls `render_ref()` and then eats your widget. How rude! So 
 lets look at the implementation of `WidgetRef`. Many of Ratatui's widgets
 follow this template:
 
@@ -77,12 +79,12 @@ impl WidgetRef for WidgetFoo<'_> {
 ```
 
 Of course, style and block are used in several other methods, the constructor
-`new` and the setter for `Block`. `Style` got it's own trait `Styled`).
+`new` and the setter for `Block`. `Style` got its own trait, `Styled`).
 `Block` and `Style` act the same in each widget, is it necessary to repeat this
 code? In addition `Block` has its own `Style`, I assume that the widget needs
-it own version is because block is optional. I assume `Block` has grown, it
-acquires more features as the alternative is to start change all widgets,
-is it a block? What is it?
+it own version is because block is optional. I suspect `Block` has grown, it
+acquires more features as the alternative is to change all the
+widgets,is it still a block? What is it?
 
 Let's analyze the rendering of a widget. `Style` and `Block` are handled first,
 here is what happens:
@@ -96,7 +98,7 @@ They both run some code before the widget is rendered, and `Block` changes the
 of the widget. The widget doesn't need them. The inclusion of both is repetitive,
 leads to complexity and inflexibility.
 
-Let's ask the question "What is composed of what?". Can we turn the composition
+Let's ask the question “What is composed of what?”. Can we turn the composition
 inside out, include widgets in `Block` (and `Style` too), the
 second composition way:
   
@@ -107,24 +109,26 @@ struct Block<'a> {
 }
 
 impl WidgetRef for Block<'_> {
-fn render_ref(&self, area: Rect, buf: &mut Buffer) {
-    buf.set_style(area, self.style);
-    self.render_block(area, buf);
-    let inner = self.inner_area(area);
-    self.widget.render_ref(inner, buf);
+    fn render_ref(&self, area: Rect, buf: &mut Buffer) {
+        buf.set_style(area, self.style);
+        self.render_block(area, buf);
+        let inner = self.inner_area(area);
+        self.widget.render_ref(inner, buf);
     }
 }
 ```
 
 So `Block` becomes a wrapper of a widget and implements `Widget`, it 
 modifies the input and/or the output of the contained widget. As
-it is a widget it self, it suddenly is possible to add two borders
+it is a widget itself, it suddenly is possible to add two borders
 around the widget. Voilà! Now our widgets become like onions: 
 `(Style(Block(Paragraph)))`.
 
-<img src="widget_onion.png" alt="Widget in onion" class="photo w85" />
+<div align="center"> 
+{{ picture(src="widget_onion", ext="jpg", alt="A widget inside of an onion", class="photo w80") }}
+</div>
 
-O, clever me, I just reinvented the **Decorator Pattern**:
+Oh, clever me, I just reinvented the **Decorator Pattern**:
 
 > **Decorator**
 >
@@ -138,22 +142,6 @@ O, clever me, I just reinvented the **Decorator Pattern**:
 >
 > {{ cite(authors="Gamma et al.", year="1994", id="ref-gamma1994") }}
 
-<aside>
-
-# Decorator pattern in Rust
-
-In Rust the decorator pattern consists of a trait, objects
-implementing the trait and wrappers (decorators) modifying
-the trait. The decorators typically use either generics {{
-cite( id="ref-snoek2023", authors="Snoek, I.", year="2023") }}
-or trait objects {{ cite(authors="lpxxn", year="2025",
-id="ref-lpxxn2025") }} and green tea , to wrap the objects.
-
-See {{ cite(authors="Drysdale, D.", year="2024",
-id="ref-drysdale2024") }} for a comparison of generics with
-trait objects.
-
-</aside>
 
 Luckily Rust doesn't suffer from subclassing, but having a
 dynamic, flexible way to extend functionality sure is nice to have and
@@ -173,10 +161,11 @@ The gang continues about decorators:
 >
 >  {{ cite(authors="Gamma et al.", year="1994", id="ref-gamma1994") }}
 
-Hey, that that complex, customizable class, that is the `Block` widget
-right there! And those simple pieces! Yummie! Gimme, gimme, gimme!
+Hey, that complex, customizable class, that is the `Block` widget
+right there! And those simple pieces! Yummy! Gimme, gimme, gimme!
 
-<div align="center"><img src="garnish_parsley.png" alt="Radish slices"  width="100" />
+<div align="center">
+{{ picture(src="garnish_parsley", ext="png", alt="Decorative image of garnish, a Parsley leaf", class="w20") }}
 
 ## Garnishing
 
@@ -219,12 +208,13 @@ and `Block` in rendering widgets. The last method, `after_render`, is new.
 That is not something the `Block` widget does. Can you think of a useful
 Garnish that renders after the widget has been rendered?
 
-In a way I think the use of the term 'decorator pattern' is a bit unfortunate
+In a way I think the use of the term “decorator pattern” is a bit unfortunate
 as it implies a certain application. What we really doing is function
 composition using traits. And this is way more powerful than just decorating
 a widget with a border.
 
-<div align="center"><img src="garnish_flower.png" alt="Radish slices"  width="100" />
+<div align="center">
+{{ picture(src="garnish_flower", ext="png", alt="Decorative image of garnish, a flower", class="w20") }}
 
 ## Garnished Widgets
 
@@ -245,7 +235,7 @@ all variations of `Widget` for each garnish, only the relevant methods of
 ```rust
 pub struct GarnishedWidget<W> {
    widget: W,
-   garnish: Vec<RenderModifier>,
+   garnishes: Vec<RenderModifier>,
 }
 ```
 
@@ -340,7 +330,7 @@ The line `vec Garnishes`, creates a wrapper around
 a `Vec<Garnish>` with delegated `Vec` methods and variant-specific
 utilities. It supports flexible insertion via `Into<Garnish>` and provides
 methods like `first_style`, `count_style`, and `all_style` for
-variant-specific access. A `garnishes!` macro is also generated
+variant-specific access. The `garnishes!` macro is also generated
 for easy initialization. `Garnishes` is useful for garnishing
 several widgets with the same garnishes.
 
@@ -389,7 +379,7 @@ impl<'a, W: WidgetRef + Clone> WidgetRef for GarnishedWidget<'a, W> {
 As you can see the `after_render()`s are executed in the same order
 as the `before_render()`s, which makes it bit easier to reason about than
 the recursive `struct` from the basic decorator pattern. Let's finish off
-our `GarnishedWidget` by giving it an constructor, and
+our `GarnishedWidget` by giving it a constructor, and
 as push doesn't sound like what a chef does to decorate a dish
 lets wrap that and make it chainable:
 
@@ -418,7 +408,8 @@ This setup is a bit more complex than the basic decorator, but this
 initial complexity and the leverage of traits
 makes the subsequent implementation of garnishes a breeze.
 
-<div align="center"><img src="garnish_mint.png" alt="Basil"  width="140" />
+<div align="center">
+{{ picture(src="garnish_cheese", ext="png", alt="Decorative image of garnish, grated cheese", class="w20") }}
 
 ## Garnishable Widgets
 
@@ -446,7 +437,8 @@ As you can see with `ratatui-garnish`, you can easily turn the
 three blockless text widgets from Ratatui `Text`, `Line` and `Span`, into
 full widgets with borders, padding & titles.
 
-<div align="center"><img src="garnish_basil.png" alt="Basil"  width="140" />
+<div align="center">
+{{ picture(src="garnish_basil", ext="png", alt="Decorative image of garnish, Basil leaves", class="w30") }}
 
 ## Garnishes
 
@@ -494,7 +486,12 @@ impl Garnish for Padding {
 }
 ```
 
+<div align="center">
+{{ picture(src="garnish_jullien1", ext="png", alt="Decorative image of garnish, vegetable jullien", class="w30") }}
+
 ## Available garnishes
+
+</div>
 
 Instead of `Block`, `ratatui-garnish` uses many simple garnishes
 to provide similar functionality. As this article's focus is on
@@ -504,7 +501,7 @@ version 0.1.0 (more garnishes are planned).
 
 ### Borders
 - Standard: `PlainBorder`, `RoundedBorder`, `DoubleBorder`, `ThickBorder`
-- Dashed variants: `DashedBorder`, `RoundedDashedBorder`, `ThickDashedBorder`, `DoubleDashedBorder`, `RoundedDoubleDashedBorder`, `ThickDoubleDashedBorder`
+- Dashed variants: `DashedBorder`, `RoundedDashedBorder`, `ThickDashedBorder`,
 - Custom: `CharBorder` (single character, e.g., `****`), `CustomBorder` (fully customizable character set)
 - Specialty: `QuadrantInsideBorder`, `QuadrantOutsideBorder`, `FatInsideBorder`, `FatOutsideBorder`
 
@@ -527,7 +524,12 @@ implement a garnish, implement one or more of the methods from
 have a look at the `Title<Top>` garnish from the title module, it renders
 *over* the top row of the widgets `Area`.
 
+<div align="center">
+{{ picture(src="garnish_mint", ext="png", alt="Decorative image of garnish, Mint leaves", class="w25") }}
+
 ## Garnishes
+
+</div>
 
 There are quite a number of garnishes! To make it easy to apply
 the same set of garnishes to multiple widgets, `ratatui-garnish` has a
@@ -562,25 +564,167 @@ other_widget.extend(garnishes);
 ```
 
 A serializable `Garnishes` would make it easy
-to make ratatui applications themeable.
+to make Ratatui applications themeable.
 Regrettably I could not make `Garnishes` serializable with serde
 as the `Title` garnishes are a wrapper around
 `ratatui::text::Line` which doesn't implement `Serialize` and
 `Deserialize`. 
 
-<div align="center"><img src="garnish_saffron.png" alt="Saffron"  width="100" />
+<div align="center">
+{{ picture(src="garnish_roquefort", ext="png", alt="Decorative image of garnish, crumbled Roquefort", class="w45") }}
 
 ## Recipes
 
 </div>
 
 Here are some examples with screenshots of what you can do with ratatui-garnish.
-I haven't included the code for the widgets, just the `Vec<Garnish>` used
-to generate the screenshot.
+I only show the garnishes used, the complete code can
+be found in the examples directory in the github repo.
 
+### Padding
 
+This example shows a combination of `Style` and `Padding`
+garnishes on a `ratatui::text::Line` widget.
+
+To run this example:
+
+```bash
+git clone http://github.com/franklaranja/ratatui-garnish
+cd ratatui-garnish
+cargo run --example padding
+```
+    
+<div align="center">
+{{ picture(src="padding", ext="jpg", alt="Screenshot of padding example", class="w80") }}
+</div>
+
+```rust
+garnishes![
+    Style::default().bg(ORANGE400),
+    Padding::vertical(1),
+    Style::default().bg(ORANGE600),
+    Padding::horizontal(2),
+    Style::default().bg(BLUE100),
+    Padding::left(2),
+    Style::default().bg(BLUE200),
+    Padding::top(1),
+    Style::default().bg(BLUE300),
+    Padding::right(2),
+    Style::default().bg(BLUE400),
+    Padding::bottom(1),
+    Style::default().bg(BLUE500),
+    Padding::left(2),
+    Style::default().bg(BLUE600),
+    Padding::top(1),
+    Style::default().bg(BLUE700),
+    Padding::right(2),
+    Style::default().bg(BLUE800),
+    Padding::bottom(1),
+    Style::default().bg(BLUE900),
+    Padding::top(1),
+
+```
+
+### Borders
+
+You can add any combination of borders to a widget, in this
+example it is again a `ratatui::text::Line`.
+
+To run this example:
+
+```bash
+cargo run --example borders
+```
+    
+<div align="center">
+{{ picture(src="borders", ext="jpg", alt="Screenshot of borders example", class="w80") }}
+</div>
+
+```rust
+garnishes![
+    Style::default().fg(Color::Rgb(220, 0, 0)),
+    CustomBorder::new(BorderSet::dashed().corners('♥')),
+    Padding::proportional(1),
+    CharBorder::new('♥').borders(Borders::TOP | Borders::BOTTOM),
+    Padding::horizontal(1),
+    Style::default().fg(GREEN700),
+    PlainBorder::default(),
+    Padding::horizontal(1),
+    Style::default().fg(GREEN600),
+    PlainBorder::default(),
+    Padding::horizontal(1),
+    Style::default().fg(GREEN500),
+    PlainBorder::default(),
+    Padding::top(1),
+];
+```
+
+### Titles
+
+This example shows the title garnishes, notice the difference
+between titles that reserve space (the triangles) and those
+that render over the border.
+
+To run this example:
+
+```bash
+cargo run --example titles
+```
+
+<div align="center">
+{{ picture(src="titles", ext="jpg", alt="Screenshot of titles example", class="w80") }}
+</div>
+
+```rust
+garnishes![
+    Title::<Above>::styled("▲", Style::default().fg(ORANGE500)).centered(),
+    Title::<Below>::styled("▼", Style::default().fg(BLUE500)).centered(),
+    Title::<Before>::styled("◀", Style::default().fg(PURPLE500)).centered(),
+    Title::<After>::styled("▶", Style::default().fg(GREEN500)).centered(),
+    Padding::horizontal(1),
+    Title::<Top>::styled(" top ", Style::default().fg(ORANGE200)).centered(),
+    Title::<Bottom>::styled(" bottom ", Style::default().fg(BLUE200)).centered(),
+    Title::<Left>::styled(" left ", Style::default().fg(PURPLE200)).centered(),
+    Title::<Right>::styled(" right ", Style::default().fg(GREEN200)).centered(),
+    RoundedBorder::default(),
+    Padding::top(4),
+];
+```
+
+### Shadow
+
+Here we add a `Title::<Above>` and a `HalfShadow` to a
+`ratatui::widgets::Paragraph` widget.
+
+To run this example:
+
+```bash
+cargo run --example shadow
+```
+
+<div align="center">
+{{ picture(src="shadow", ext="jpg", alt="Screenshot of shadow example", class="w80") }}
+</div>
+
+```rust
+garnishes![
+    Style::default().fg(BLUE600),
+    HalfShadow::default(),
+    Title::<Above>::styled(
+        "From \"The Rust Programming Language\"",
+        Style::default().bg(ORANGE400).fg(BLUE900)
+    ).centered(),
+    Style::default().bg(ORANGE100).fg(ORANGE700),
+    Padding::proportional(2),
+];
+```
+
+<div align="center">
+{{ picture(src="garnish_almonds", ext="png", alt="Decorative image of garnish, Almonds", class="w35") }}
 
 ## Compositions compared
+
+</div>
 
 In this article we looked at three way to compose to types of
 structs (A and B) in Rust, 
@@ -589,7 +733,243 @@ structs (A and B) in Rust,
 2. Include struct A in struct B. (Traditional decorator pattern)
 3. Include struct A and B in struct C. (ratatui-garnish)
 
+<div class="struct diagram">
+    <div class="struct-name">Paragraph</div>
+    <ul class="fields">
+        <li class="option-field">
+            <div class="field-name">block</div>
+            <div class="struct">
+                <div class="struct-name">Block</div>
+                <ul class="fields">
+                    <li class="vec-field">
+                        <div class="field-name">titles</div>
+                        <ul class="tuple">
+                            <li class="option-field">
+                                <div class="struct">
+                                    <div class="struct-name">Position</div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="struct">
+                                    <div class="struct-name">Line</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_alignment</div>
+                        <div class="struct">
+                            <div class="struct-name">Alignment</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">titles_position</div>
+                        <div class="struct">
+                            <div class="struct-name">Position</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">borders</div>
+                        <div class="struct">
+                            <div class="struct-name">Borders</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">border_style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">border_set</div>
+                        <div class="struct">
+                            <div class="struct-name">border::Set</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">padding</div>
+                        <div class="struct">
+                            <div class="struct-name">Padding</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">style</div>
+            <div class="struct">
+                <div class="struct-name">Style</div>
+            </div>
+        </li>
+        <li class="option-field">
+            <div class="field-name">wrap</div>
+            <div class="struct">
+                <div class="struct-name">Wrap<div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">text</div>
+            <div class="struct">
+                <div class="struct-name">Text</div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">scroll</div>
+            <div class="struct">
+                <div class="struct-name">Scroll</div>
+            </div>
+        </li>
+        <li>
+            <div class="field-name">alignment</div>
+            <div class="struct">
+                <div class="struct-name">Alignment</div>
+            </div>
+        </li>
+    </ul>
+</div>
 
+### Decorator pattern in Rust
+
+In Rust the decorator pattern consists of a trait, objects
+implementing the trait and wrappers (decorators) modifying
+the trait. The decorators typically use either generics {{
+cite( id="ref-snoek2023", authors="Snoek, I.", year="2023") }}
+or trait objects {{ cite(authors="lpxxn", year="2025",
+id="ref-lpxxn2025") }} and green tea , to wrap the objects.
+
+See {{ cite(authors="Drysdale, D.", year="2024",
+id="ref-drysdale2024") }} for a comparison of generics with
+trait objects.
+
+<div class="struct diagram">
+    <div class="struct-name">Style</div>
+    <ul class="fields">
+        <li><div class="field-name">style fields...</div></li>
+        <li class="trait-object-field">
+            <div class="field-name">widget</div>
+            <div class="struct">
+                <div class="struct-name">Border</div>
+                <ul class="fields">
+                    <li><div class="field-name">border fields...</div></li>
+                    <li class="trait-object-field">
+                        <div class="field-name">widget</div>
+                        <div class="struct">
+                            <div class="struct-name">Padding</div>
+                            <ul class="fields">
+                                <li><div class="field-name">padding fields...</div></li>
+                                <li class="trait-object-field">
+                                    <div class="field-name">widget</div>
+                                    <div class="struct">
+                                        <div class="struct-name">Paragraph</div>
+                                        <ul class="fields">
+                                            <li class="option-field">
+                                                <div class="field-name">wrap</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Wrap<div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">text</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Text</div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">scroll</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Scroll</div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="field-name">alignment</div>
+                                                <div class="struct">
+                                                    <div class="struct-name">Alignment</div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<div class="struct diagram">
+    <div class="struct-name">GarnishedWidget</div>
+    <ul class="fields">
+        <li class="generic-field">
+            <div class="field-name">widget</div>
+            <div class="struct">
+                <div class="struct-name">Paragraph</div>
+                <ul class="fields">
+                    <li class="option-field">
+                        <div class="field-name">wrap</div>
+                        <div class="struct">
+                            <div class="struct-name">Wrap<div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">text</div>
+                        <div class="struct">
+                            <div class="struct-name">Text</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">scroll</div>
+                        <div class="struct">
+                            <div class="struct-name">Scroll</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="field-name">alignment</div>
+                        <div class="struct">
+                            <div class="struct-name">Alignment</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="vec-field">
+            <div class="field-name">garnishes</div>
+            <div class="enum">
+                <div class="enum-name">Garnish</div>
+                <ul class="variants">
+                    <li>
+                        <div class="variant-name">Style</div>
+                        <div class="struct">
+                            <div class="struct-name">Style</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Border</div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Title</div>
+                    </li>
+                    <li>
+                        <div class="variant-name">Padding</div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
 
 <div align="center"><img src="garnish_lemon.png" alt="Lemon curl"  width="150"/>
 

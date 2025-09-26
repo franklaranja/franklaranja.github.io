@@ -6,8 +6,8 @@ template = "about.html"
 
 <div class="stack">
 
-{{ image(src="/images/frank_laranja", ext="jpg", 
-alt="photo of Frank Laranja", class="float-image", width="30%")}}
+{{ picture(src="/images/frank_laranja", ext="jpg", 
+alt="photo of Frank Laranja", class="float-image w35")}}
 
 I’m a Rust programmer and consultant dedicated to crafting high-quality code
 that brings your projects to life. Since diving into Rust in 2018, I’ve been

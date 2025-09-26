@@ -1,0 +1,53 @@
+digraph compositions {
+    rankdir=TB;
+    bgcolor="white";
+    node [shape=box, style=rounded, fontname="Fira Code", fontsize=12];
+    edge [color="#333333"];
+
+    // Ratatui Way
+    subgraph cluster_ratatui {
+        label="Ratatui Way";
+        style=filled; fillcolor="#f0f0f0";
+        widget_foo [label="WidgetFoo", fillcolor="#4b8bbe", fontcolor="white"];
+        style_r [label="Style", fillcolor="#888888", fontcolor="white"];
+        block_r [label="Block\n(Title, Borders)", fillcolor="#888888", fontcolor="white"];
+        widget_foo -> style_r [style=invis];
+        widget_foo -> block_r [style=invis];
+        { rank=same; style_r; block_r }
+    }
+    ratatui_note [shape=note, label="Fixed, embedded fields\nRepetitive code", style=filled, fillcolor="#f8e1a8"];
+
+    // Traditional Decorator
+    subgraph cluster_decorator {
+        label="Traditional Decorator";
+        style=filled; fillcolor="#f0f0f0";
+        style_d [label="Style\nrender", fillcolor="#888888", fontcolor="white"];
+        block_d [label="Block\nrender", fillcolor="#4CAF50", fontcolor="white"];
+        widget_d [label="Widget\nrender", fillcolor="#4b8bbe", fontcolor="white"];
+        style_d -> block_d [label="wraps"];
+        block_d -> widget_d [label="wraps"];
+    }
+    decorator_note [shape=note, label="Recursive, trait objects\nDynamic but costly", style=filled, fillcolor="#f8e1a8"];
+
+    // Flat Decorator
+    subgraph cluster_flat {
+        label="Flat Decorator";
+        style=filled; fillcolor="#f0f0f0";
+        garnished [label="GarnishedWidget", fillcolor="#4b8bbe", fontcolor="white"];
+        widget_f [label="Widget\nrender", fillcolor="#4b8bbe", fontcolor="white"];
+        garnishes [label="Garnishes: Vec", fillcolor="#4CAF50", fontcolor="white"];
+        garnish_style [label="Garnish::Style", fillcolor="#88CC88"];
+        garnish_block [label="Garnish::Block", fillcolor="#88CC88"];
+        garnish_padding [label="Garnish::Padding", fillcolor="#88CC88"];
+        garnish_title [label="Garnish::Title", fillcolor="#88CC88"];
+        garnished -> widget_f [style=invis];
+        garnished -> garnishes [style=invis];
+        garnishes -> garnish_style [style=invis];
+        garnishes -> garnish_block [style=invis];
+        garnishes -> garnish_padding [style=invis];
+        garnishes -> garnish_title [style=invis];
+        { rank=same; garnish_style; garnish_block; garnish_padding; garnish_title }
+        garnishes -> widget_f [style=dashed, label="hooks"];
+    }
+    flat_note [shape=note, label="Contiguous, type-safe\nFlexible and efficient", style=filled, fillcolor="#f8e1a8"];
+}

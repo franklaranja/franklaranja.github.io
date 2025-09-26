@@ -25,7 +25,7 @@
         <section class="news-carousel">
           {% set new = load_data(path="data/new.toml", format="toml") %}
           <div class="news-item">
-              <div align="center"><img src="images/rust-logo.svg"></div>
+              <div align="center"><img src="images/rust-logo.svg" alt="Rust logo"></div>
           </div>
           {% for news in new.item | sort(attribute="date") | reverse %}
             <div class="news-item card">
