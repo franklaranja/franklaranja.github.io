@@ -17,9 +17,14 @@ e=yes">
     {% block content %}
     {% endblock %}
     <footer>
+      <picture class="flourish">
+         <source srcset="/images/flourish.avif" type="image/avif">
+         <source srcset="/images/flourish.webp" type="image/webp">
+         <img src="/images/flourish.png" alt="flourish with lots of curls">
+      </picture>
 
-      <img src="/images/swash1.png" class="w80">
       <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
+
       <p>
         <a href="/articles">articles</a>
         | <a href="/code">code</a>
