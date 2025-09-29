@@ -1,243 +1,225 @@
 @use 'fonts';
 @use 'rgb_palette';
 
-@mixin neon-glow {
-  transition: text-shadow 0.3s ease;
-  animation-timing-function: ease-in-out;
-  animation: glow 1s infinite;
-  @keyframes glow {
-    0% {
-      text-shadow: 0 0 var(--s-3) rgba(var(--blue-500) / 0.6);
-    }
-    25% {
-      text-shadow: 0 0 var(--s-2) rgba(var(--blue-500) / 0.9);
-    }
-    50% {
-      text-shadow: 0 0 var(--s-1) rgba(var(--blue-500) / 1.0);
-    }
-    75% {
-      text-shadow: 0 0 var(--s-2) rgba(var(--blue-500) / 0.9);
-    }
-    100% {
-      text-shadow: 0 0 var(--s-3) rgba(var(--blue-500) / 0.6);
+// ============================================================================
+// CONFIGURATION & VARIABLES
+// ============================================================================
+
+:root {
+  font-size: clamp(14px, calc(1rem + 0.25vw), 20px);
+
+  --ratio: 1.5;
+  --s-6: calc(var(--s-5) / var(--ratio)); 
+  --s-5: calc(var(--s-4) / var(--ratio)); 
+  --s-4: calc(var(--s-3) / var(--ratio)); 
+  --s-3: calc(var(--s-2) / var(--ratio)); 
+  --s-2: calc(var(--s-1) / var(--ratio)); 
+  --s-1: calc(var(--s0) / var(--ratio)); 
+  --s0: 1rem; 
+  --s1: calc(var(--s0) * var(--ratio)); 
+  --s2: calc(var(--s1) * var(--ratio)); 
+  --s3: calc(var(--s2) * var(--ratio)); 
+  --s4: calc(var(--s3) * var(--ratio)); 
+  --s5: calc(var(--s4) * var(--ratio));
+  --s6: calc(var(--s5) * var(--ratio));
+
+  // Layout - constrained by header image width (1344px)
+  --max-width: min(70ch, 1344px);
+  --content-padding: clamp(var(--s-2), 2vw, var(--s0));
+  --indent: var(--s0);
+
+  // Typography
+  --interface-font: Orbitron, sans-serif;
+  --monospace-font: FiraCode, monospace;
+  --main-font: CrimsonPro, serif;
+  --heading-font: Julee, sans-serif;
+
+  // Colors - using semantic naming
+  --background-color: var(--blue-900);
+  --text-color: var(--orange-50);
+  --link-color: var(--blue-400);
+  --visited-color: var(--blue-100);
+  --error-color: #ff7070;
+  --accent-color: var(--green-400);
+}
+
+// Responsive breakpoints
+$breakpoints: (
+  small: 30em,   // 480px
+  medium: 50em,  // 800px
+  large: 70em    // 1120px
+);
+
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
     }
   }
 }
 
+// ============================================================================
+// MIXINS
+// ============================================================================
 
-@mixin stack($space) {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-
-    & > * {
-      margin-block: 0;
-    }
-
-    & > * + * {
-      margin-block-start: $space;
-    }
+@mixin neon-glow($color: var(--blue-500), $intensity: 0.6) {
+  transition: text-shadow 0.3s ease;
+  animation: glow 1s infinite ease-in-out;
+  
+  @keyframes glow {
+    0%, 100% { text-shadow: 0 0 var(--s-3) rgba($color / $intensity); }
+    25%, 75% { text-shadow: 0 0 var(--s-2) rgba($color / ($intensity * 1.5)); }
+    50% { text-shadow: 0 0 var(--s-1) rgba($color / 1.0); }
+  }
 }
 
-@mixin center($gutter, $maxsize: var(--max-width)) {
+@mixin stack($space: var(--s1)) {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  & > * {
+    margin-block: 0;
+    
+    &:not(:first-child) {
+      margin-block-start: $space;
+    }
+  }
+}
+
+@mixin center($gutter: var(--content-padding), $maxsize: var(--max-width)) {
   box-sizing: content-box;
   max-inline-size: $maxsize; 
   margin-inline: auto; 
-  padding-inline-start: $gutter; 
-  padding-inline-end: $gutter; 
+  padding-inline: $gutter; 
 }
 
-@mixin center-text-too($gutter, $maxsize: var(--max-width)) {
-  box-sizing: content-box;
-  max-inline-size: $maxsize;
+@mixin center-text($gutter: var(--content-padding), $maxsize: var(--max-width)) {
+  @include center($gutter, $maxsize);
   text-align: center;
-  margin-inline: auto; 
-  padding-inline-start: $gutter; 
-  padding-inline-end: $gutter; 
 }
 
-@mixin link-button($background, $shadow) {
+@mixin button-base($bg-color, $text-color: var(--link-color)) {
   font-family: var(--interface-font);
   font-size: var(--s0);
-  display: block;
-  background-color: rgba($background / 0.5);
-  color: rgb(var(--link-color));
-  transition: background-color 0.3s;
-  padding: var(--s-5) var(--s-2);
-  border: 1px solid;
-  border-radius: var(--s-2);
-  text-shadow: 2px 0 var(--s-2) rgba($shadow / 0.7);
   font-weight: 700;
-}
-
-@mixin box($padding, $border, $light, $dark) {
-  padding: $padding;
-  border: $border solid; 
-  outline: $border transparent;
-  outline-offset: calc($border * -1); 
-  color: $dark;
-  background-color: $light;
-
-  & * {
-    color: inherit; 
+  display: block;
+  background-color: rgba($bg-color / 0.5);
+  color: rgb($text-color);
+  padding: var(--s-5) var(--s-2);
+  border: 1px solid rgb($text-color);
+  border-radius: var(--s-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover,
+  &:focus {
+    background-color: rgba($bg-color / 0.7);
+    transform: translateY(-2px);
   }
 }
 
-@mixin grid($gutter: 1rem, $min: 20ch) {
-  display: grid; 
-  grid-gap: $gutter; 
-  grid-template-columns: repeat(auto-fit, minmax(min($min, 100%), 1fr));
+@mixin shadowed-button($bg-color, $shadow-color, $text-color: var(--link-color)) {
+  @include button-base($bg-color, $text-color);
+  text-shadow: 2px 0 var(--s-2) rgba($shadow-color / 0.7);
 }
 
-@mixin cluster($space: 1rem, $justify: flex-start, $align: flex-start) {
+@mixin card($padding: var(--s1), $border-width: 1px) {
+  padding: $padding;
+  border: $border-width solid; 
+  border-radius: var(--s-1);
+  background-clip: padding-box;
+}
+
+@mixin grid($min-size: 20ch, $gap: var(--s1)) {
+  display: grid; 
+  gap: $gap; 
+  grid-template-columns: repeat(auto-fit, minmax(min($min-size, 100%), 1fr));
+}
+
+@mixin cluster($gap: var(--s1), $justify: flex-start, $align: flex-start) {
   display: flex; 
   flex-wrap: wrap; 
-  gap: $space; 
+  gap: $gap; 
   justify-content: $justify; 
   align-items: $align; 
 }
 
-:root {
-    font-size: calc(1rem + 0.5vw);
-    --ratio: 1.5;
-    --s-6: calc(var(--s-5) / var(--ratio)); 
-    --s-5: calc(var(--s-4) / var(--ratio)); 
-    --s-4: calc(var(--s-3) / var(--ratio)); 
-    --s-3: calc(var(--s-2) / var(--ratio)); 
-    --s-2: calc(var(--s-1) / var(--ratio)); 
-    --s-1: calc(var(--s0) / var(--ratio)); 
-    --s0: 1rem; 
-    --s1: calc(var(--s0) * var(--ratio)); 
-    --s2: calc(var(--s1) * var(--ratio)); 
-    --s3: calc(var(--s2) * var(--ratio)); 
-    --s4: calc(var(--s3) * var(--ratio)); 
-    --s5: calc(var(--s4) * var(--ratio));
-    --s6: calc(var(--s5) * var(--ratio));
-
-    --max-width: 70ch; /* between 45-75 */
-
-    --interface-font: Orbitron, sans-serif;
-    --monospace-font: FiraCode, monospace;
-    --main-font: CrimsonPro, serif;
-    --heading-font: Julee, sans-serif;
-    --indent: var(--s0);
-
-    --background-color: var(--blue-900);
-    /* --background-color: 0 0 0; */
-    --text-color: var(--orange-50);
-    --link-color: var(--blue-400);
-    --visited-color: var(--blue-100);
-    --error-color: #ff7070;
-
-}
-
-.neon {
-  @include neon-glow;
-}
-
-.badge {
-  font-family: var(--interface-font);
-  font-size: var(--s-1);
-  color: rgb(var(--blue-900));
-  background: rgb(var(--green-600));
-  border: 1px solid rgb(var(--green-900));
-  transition: background-color 0.3s;
-  padding: var(--s-5) var(--s-2);
-  border-radius: var(--s-2);
-  font-weight: 700;
-  @include neon-glow;
-}
-
-.stack {
-  display: flow-root;
-  p {
-    margin-bottom: var(--s1);
-  }
-}
-
-.w5 {  max-width: 5%; }
-.w10 {  max-width: 10%; }
-.w15 {  max-width: 15%; }
-.w20 {  max-width: 20%; }
-.w25 {  max-width: 25%; }
-.w30 {  max-width: 30%; }
-.w35 {  max-width: 35%; }
-.w40 {  max-width: 40%; }
-.w45 {  max-width: 45%; }
-.w50 {  max-width: 50%; }
-.w55 {  max-width: 55%; }
-.w60 {  max-width: 60%; }
-.w65 {  max-width: 65%; }
-.w70 {  max-width: 70%; }
-.w75 {  max-width: 75%; }
-.w80 {  max-width: 80%; }
-.w85 {  max-width: 85%; }
-.w90 {  max-width: 90%; }
-.w95 {  max-width: 95%; }
-.w100 {  max-width: 100%; }
+// ============================================================================
+// BASE STYLES
+// ============================================================================
 
 @layer reset {
   *,
   *::before,
   *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
   html {
     text-size-adjust: 100%;
     scroll-behavior: smooth;
-    font-size: 16px;
+    
+    @include respond-to(medium) {
+      font-size: clamp(16px, calc(1rem + 0.5vw), 24px);
+    }
+    
+    @include respond-to(large) {
+      font-size: clamp(18px, calc(1rem + 0.75vw), 28px);
+    }
   }
 
   body {
     font-family: var(--main-font);
     font-size: var(--s0);
-    /* font-size: var(--s0) !important; */
     line-height: 1.7;
-    accent-color: rgb(var(--green-400));
+    accent-color: rgb(var(--accent-color));
     background-color: rgb(var(--background-color));
     color: rgb(var(--text-color));
     @include stack(var(--s2));
-    @include center(var(--s-6));
+    @include center();
     margin-bottom: var(--s1);
   }
 
-  p, h1, h2, h3, h4, h5, h6 {
+  // Typography hierarchy
+  %heading-base {
+    font-family: var(--heading-font);
+    color: rgb(var(--orange-100));
+    letter-spacing: var(--s-5);
     margin-block: 0;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--heading-font);
-    color: rgb(var(--orange-100));
-    /* margin-bottom: var(--s0); */
-    letter-spacing: var(--s-5);
-  }
-
   h1 {
-    font-size: var(--s2);
+    @extend %heading-base;
+    font-size: clamp(var(--s1), 4vw, var(--s3));
     color: rgb(var(--orange-500));
     text-align: center;
     letter-spacing: var(--s-4);
   }
 
   h2 {
-    font-size: var(--s1);
+    @extend %heading-base;
+    font-size: clamp(var(--s0), 3vw, var(--s2));
     color: rgb(var(--orange-400));
     letter-spacing: var(--s-4);
   }
 
   h3 {
+    @extend %heading-base;
+    font-size: clamp(var(--s-1), 2.5vw, var(--s1));
     color: rgb(var(--orange-400));
   }
 
-  h4 {
+  h4, h5 {
+    @extend %heading-base;
     color: rgb(var(--orange-300));
   }
 
-  h5 {
-    color: rgb(var(--orange-300));
+  p {
+    margin-block: 0;
   }
 
   b, strong {
@@ -248,18 +230,18 @@
     color: inherit;
     text-decoration: none;
 
-    &:link {
-      color: rgb(var(--link-color));
-    }
-
-    &:visited {
-      color: rgb(var(--visited-color));
+    &:link { color: rgb(var(--link-color)); }
+    &:visited { color: rgb(var(--visited-color)); }
+    
+    &:hover, &:focus {
+      text-decoration: underline;
     }
   }
 
   code {
     font-family: var(--monospace-font);
     color: rgb(var(--green-300));
+    font-size: 0.9em;
   }
 
   pre {
@@ -268,50 +250,51 @@
     padding-left: var(--s-2);
     border-left: 1px solid rgb(var(--blue-500));
     line-height: 1.4;
-    font-size: calc(var(--s0) * 0.95);
+    font-size: 0.95em;
+    overflow-x: auto;
   }
 
-  ol, ul, li {
+  ol, ul {
     margin-left: var(--indent);
+    
+    li {
+      margin-left: 0;
+    }
   }
 
   blockquote {
     color: rgb(var(--orange-100));
-    margin-left: var(--indent);
-    margin-right: var(--indent);
+    margin-inline: var(--indent);
     padding-left: var(--s-2);
     border-left: 1px solid rgb(var(--orange-500));
+    font-style: italic;
   }
 
-  input,
-  button,
-  textarea {
-    font: inherit,
+  input, button, textarea {
+    font: inherit;
   }
 
   button, [type="button"], [type="submit"], [type="reset"] {
-      cursor: pointer;
+    cursor: pointer;
   }
 
   img {
-      max-width: 100%;
-      height: auto;
-      display: block;
+    max-width: 100%;
+    height: auto;
+    display: block;
   }
 
+  // Aside boxes
   aside {
     position: relative;
     width: 30%;
     float: right;
-    @include box(var(--s2), 1px, rgb(var(--orange-900)), rgb(var(--orange-600)));
+    @include card(var(--s0));
     @include stack(var(--s-1));
-    border-radius: var(--s-1);
     color: rgb(var(--orange-100));
     font-size: var(--s-1);
-    margin-left: var(--s2);
-    margin-right: var(--indent);
-    margin-bottom: var(--s3);
-    padding: var(--s0);
+    margin: 0 var(--indent) var(--s3) var(--s2);
+    background-color: rgb(var(--orange-900));
     border-color: rgb(var(--orange-800));
     box-shadow: 0 0 var(--s-1) rgb(var(--orange-200));
 
@@ -320,8 +303,45 @@
       color: rgb(var(--orange-500));
       text-align: left;
     }
+    
+    @include respond-to(medium) {
+      width: 100%;
+      float: none;
+      margin: var(--s1);
+    }
   }
 }
+
+// ============================================================================
+// UTILITY CLASSES
+// ============================================================================
+
+.neon {
+  @include neon-glow;
+}
+
+.badge {
+  @include button-base(var(--green-400), var(--blue-900));
+  font-size: var(--s-1);
+  border: 1px solid rgb(var(--green-900));
+}
+
+.stack {
+  display: flow-root;
+  p {
+    margin-bottom: var(--s1);
+  }
+}
+
+// Width utilities - consider if all are needed
+@for $i from 1 through 20 {
+  .w#{$i * 5} { max-width: #{$i * 5%}; }
+}
+
+
+// ============================================================================
+// LAYOUT COMPONENTS
+// ============================================================================
 
 @layer header {
   header {
@@ -330,78 +350,82 @@
   }
 
   .hero {
-      position: relative;
+    position: relative;
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--s0);
+    
+    img {
       width: 100%;
       max-width: var(--max-width);
-      margin: 0 auto;
-      padding: var(--s1);
-  }
-
-  .hero img {
-      width: 100%;
-      max-width: var(--max-width);
-      display: block;
       border-radius: var(--s-1);
+    }
   }
 
   .menu {
-      position: absolute;
-      top: var(--s2);
-      left: var(--s3);
-      @include stack(var(--s-1));
+    position: absolute;
+    top: var(--s2);
+    left: var(--s3);
+    @include stack(var(--s-2));
+    
+    @media (max-width: map-get($breakpoints, medium)) {
+      top: var(--s1);
+      left: var(--s2);
+    }
   }
 
   .nav-button {
-    @include link-button(var(--blue-900), var(--green-400));
+    @include shadowed-button(var(--blue-900), var(--green-400));
+    font-size: clamp(calc(0.9 * var(--s-1)), 2.5vw, var(--s1));
 
     &:visited {
-        color: rgb(var(--blue-400));
-        font-weight: 600;
-      }
+      color: rgb(var(--blue-400));
+      font-weight: 600;
+    }
 
     &:hover,
-    &:visited.selected,
-    &:link.selected {
-        color: rgb(var(--blue-200));
-        border-color: rgb(var(--blue-400));
-        /* background-color: rgba(var(--blue-700) / 0.7); */
-        box-shadow: 0 0 var(--s-2) rgb(var(--blue-400));
-      }
+    &:focus,
+    &.selected {
+      color: rgb(var(--blue-200));
+      border-color: rgb(var(--blue-100));
+      box-shadow: 0 0 var(--s-2) rgb(var(--blue-400));
+    }
   }
 
-
   .site-title {
-      font-family: var(--heading-font);
-      font-weight: 300;
-      position: absolute;
-      top: var(--s1);
-      right: var(--s2);
-      color: rgb(var(--orange-200));
-      font-size: var(--s2);
-      text-shadow: 0 0 var(--s-5) rgba(var(--blue-900) / 0.7);
-      letter-spacing: var(--s-6);
+    font-family: var(--heading-font);
+    font-weight: 300;
+    position: absolute;
+    top: var(--s1);
+    right: var(--s2);
+    color: rgb(var(--orange-200));
+    font-size: clamp(var(--s0), 3vw, var(--s2));
+    text-shadow: 0 0 var(--s-5) rgba(var(--blue-900) / 0.7);
+    letter-spacing: var(--s-6);
 
-      a, a:link, a:visited {
+    a {
+      &:link, &:visited {
         color: rgb(var(--orange-400));
       }
+    }
   }
 }
 
 @layer main {
   main {
-    margin-left: var(--s2);
-    margin-right: var(--s2);
-  }
-
-  main > section {
-    @include stack(var(--s2));
-    display: flow-root;
+    margin-inline: var(--s2);
+    
+    > section {
+      @include stack(var(--s2));
+      display: flow-root;
+    }
   }
 }
 
 @layer footer {
   footer {
-    @include stack(var(--s-3) );
+    @include stack(var(--s-3));
     align-items: center;
     color: rgb(var(--orange-400));
     font-family: var(--interface-font);
@@ -412,28 +436,35 @@
       margin-top: calc(-1 * var(--s-2));
       font-size: var(--s0);
 
-      a, a:link, a:visited {
-        color: rgb(var(--orange-300));
+      a {
+        &:link, &:visited {
+          color: rgb(var(--orange-300));
+        }
       }
     }
 
-    a, a:link, a:visited {
-      color: rgb(var(--blue-400));
-      width: 100%;
+    a {
+      &:link, &:visited {
+        color: rgb(var(--blue-400));
+        width: 100%;
+      }
     }
 
     .flourish {
-      opacity: 70%;
+      opacity: 0.7;
       width: 70%;
       max-width: 100%;
     }
   }
-
 }
+
+// ============================================================================
+// COMPONENT-SPECIFIC STYLES
+// ============================================================================
 
 @layer code {
   .crate-grid {
-    @include grid(var(--s3), 280px);
+    @include grid(280px, var(--s3));
     max-width: var(--max-width);
   }
 
@@ -443,10 +474,7 @@
   }
 
   .crate-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--s-2);
+    @include cluster(var(--s-2), center);
   }
 
   .crate-icon {
@@ -458,24 +486,17 @@
     @include cluster(var(--s1), center, center);
 
     a {
-      @include link-button(var(--blue-700), var(--green-400));
-      font-family: var(--interface-font); // Orbitron for link
+      @include button-base(var(--blue-700));
       font-size: var(--s-1);
 
-      &:link {
-        color: rgb(var(--blue-400));
-      }
-
-      &:visited {
-        color: rgb(var(--blue-300));
-      }
-
+      &:link { color: rgb(var(--blue-400)); }
+      &:visited { color: rgb(var(--blue-300)); }
+      
       &:hover {
         color: rgb(var(--blue-300));
         @include neon-glow;
       }
     }
-
   }
 }
 
@@ -486,16 +507,16 @@
     max-width: 600px;
     margin: 20px auto;
     height: calc(14 * var(--s1));
-    /* height: auto; */
     overflow: hidden;
   }
 
   .card {
     position: relative;
-    @include box(var(--s2), 1px, rgb(var(--blue-900)), rgb(var(--blue-700)));
+    @include card(var(--s2));
     @include stack(var(--s-1));
+    background-color: rgb(var(--blue-900));
+    color: rgb(var(--blue-700));
     box-shadow: 0 0 10px rgb(var(--blue-700));
-    border-radius: var(--s-1);
     text-align: center;
     align-items: center;
 
@@ -513,18 +534,12 @@
     }
 
     a {
-      @include link-button(var(--blue-700), var(--green-400));
-      font-family: var(--interface-font); // Orbitron for link
+      @include button-base(var(--blue-700));
       font-size: var(--s-1);
 
-      &:link {
-        color: rgb(var(--blue-400));
-      }
-
-      &:visited {
-        color: rgb(var(--blue-300));
-      }
-
+      &:link { color: rgb(var(--blue-400)); }
+      &:visited { color: rgb(var(--blue-300)); }
+      
       &:hover {
         color: rgb(var(--blue-300));
         @include neon-glow;
@@ -538,153 +553,42 @@
     }
   }
 
+  // News carousel animations (simplified)
   .news-item {
     position: absolute;
     width: 80%;
     margin: var(--s2);
     padding: var(--s1);
     opacity: 0;
-    transform: translateX(-1500px); 
+    transform: translateX(-100%);
+    animation-duration: 35s;
+    animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
   }
 
-  @keyframes item1 {
-    0% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    4% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    16% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-
-    20% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-  }
-
-  @keyframes item2 {
-    0% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    20% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    24% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    36% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    40% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-
-    100% {
-      opacity: 0;
-      transform: translateX(3000px); 
+  // Generate carousel animations more efficiently
+  @for $i from 1 through 5 {
+    $delay: ($i - 1) * 20%;
+    
+    .news-item:nth-child(#{$i}) {
+      animation-name: slide-#{$i};
+      
+      @keyframes slide-#{$i} {
+        0%, #{$delay}, #{$delay + 16%} {
+          opacity: 0;
+          transform: translateX(-100%);
+        }
+        #{$delay + 4%}, #{$delay + 12%} {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        #{$delay + 20%}, 100% {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+      }
     }
   }
-
-  @keyframes item3 {
-    0% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    40% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    44% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    56% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    60% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-
-    100% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-  }
-
-
-  @keyframes item4 {
-    0% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    60% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    64% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    76% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    80% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-
-    100% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-  }
-
-  @keyframes item5 {
-    0% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    80% {
-      opacity: 0;
-      transform: translateX(-1500px); 
-    }
-    84% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    96% {
-      opacity: 1;
-      transform: translateX(0); 
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(3000px); 
-    }
-  }
-
-  .news-item:nth-child(1) { animation: item1 35s infinite; }
-  .news-item:nth-child(2) { animation: item2 35s infinite; }
-  .news-item:nth-child(3) { animation: item3 35s infinite; }
-  .news-item:nth-child(4) { animation: item4 35s infinite; }
-  .news-item:nth-child(5) { animation: item5 35s infinite; }
 }
 
 @layer reference {
@@ -719,7 +623,7 @@
 
   .ref-link {
       font-family: var(--interface-font);
-      color: rgb(var(--blue-400));
+      color: rgb(var(--link-color));
       text-decoration: none;
   }
 
@@ -754,8 +658,8 @@
         transition: border-color 0.3s, box-shadow 0.3s;
 
         &:focus {
-          border-color: rgb(var(--blue-400));
-          background: rgb(var(--blue-900));
+          border-color: rgb(var(--link-color));
+          background: rgb(var(--background-color));
           box-shadow: 0 0 10px rgb(var(--blue-200));
           outline: none;
         }
@@ -782,7 +686,7 @@
     }
 
     .cta-button {
-      @include link-button(var(--blue-700), var(--green-400));
+      @include button-base(var(--blue-700));
       cursor: pointer;
       transition: background 0.3s, transform 0.3s;
 
@@ -830,8 +734,15 @@
   
 
   .struct {
-    @include box(var(--s0), 1px, rgb(var(--orange-700)), rgb(var(--orange-300)));
+    /* @include box(var(--s0), 1px, rgb(var(--orange-700)), rgb(var(--orange-300))); */
+    @include card(var(--s0), 1px);
+    color: rgb(var(--orange-300));
+    background-color: rgb(var(--orange-700));
     box-shadow: 0 0 10px rgb(var(--orange-300));
+
+    & * {
+      color: inherit; 
+    }
 
     &:not(:has(ul)) {
       margin: 0;
@@ -860,7 +771,10 @@
   }
 
   .enum {
-    @include box(var(--s0), 1px, rgb(var(--green-700)), rgb(var(--green-300)));
+    /* @include box(var(--s0), 1px, rgb(var(--green-700)), rgb(var(--green-300))); */
+    @include card(var(--s0), 1px);
+    color: rgb(var(--green-300));
+    background-color: rgb(var(--green-700));
     box-shadow: 0 0 10px rgb(var(--green-300));
   }
   
@@ -868,7 +782,10 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    @include box(var(--s-2), 1px, rgb(var(--purple-700)), rgb(var(--purple-300)));
+    /* @include box(var(--s-2), 1px, rgb(var(--purple-700)), rgb(var(--purple-300))); */
+    @include card(var(--s0), 1px);
+    color: rgb(var(--purple-300));
+    background-color: rgb(var(--purple-700));
     box-shadow: 0 0 10px rgb(var(--purple-300));
     border-radius: var(--s-1);
   
@@ -946,45 +863,4 @@ img.photo {
   margin-left: var(--indent);
   margin-bottom: var(--s2);
   margin-right: var(--indent);
-}
-
-/* =======================*/
-/* Responsive adjustments */
-/* =======================*/
-
-@media (max-width: 50em) {
-  html {
-    font-size: 16px !important;
-  }
-
-    .hero {
-        max-width: 100%; /* Full width on smaller screens */
-        padding: var(--s0);
-    }
-
-    main {
-        padding: 0 var(--s1);
-    }
-
-    .site-title {
-        font-size: var(--s0);
-        top: var(--s0);
-        right: var(--s1);
-    }
-
-    .menu {
-        /* gap: var(--s-1); */
-        top: var(--s1);
-        left: var(--s2);
-    }
-
-    .nav-button {
-        font-size: var(--s-1);
-    }
-
-    aside {
-      width: 100%;
-      float: initial;
-      margin: var(--s1) var(--s1);
-    }
 }
