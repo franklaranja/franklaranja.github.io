@@ -1,13 +1,20 @@
 +++
 title = "About Frank Laranja"
-template = "about.html"
+template = "content_only.html"
+[extra]
+section = "about"
+menu_image = "/images/menu-anvil" 
+menu_image_alt ="A glowing red gear with a 'R' being worked on an anvil"
 +++
 # Frank Laranja
 
 <div class="stack">
 
-{{ picture(src="/images/frank_laranja", ext="jpg", 
-alt="photo of Frank Laranja", class="float-image w35")}}
+<picture>
+  <source srcset="/images/frank_laranja.avif" type="image/avif">
+  <source srcset="/images/frank_laranja.webp" type="image/webp">
+  <img src="frank_laranja.jpg" alt="portrait of Frank Laranja" class="float-image w35">
+</picture>
 
 I’m a Rust programmer and consultant dedicated to crafting high-quality code
 that brings your projects to life. Since diving into Rust in 2018, I’ve been

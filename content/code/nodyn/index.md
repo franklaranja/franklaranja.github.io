@@ -1,7 +1,11 @@
 +++
 title = "nodyn"
 template = "code.html"
+description = "A Rust proc-macro that makes polymorphism with enums easy."
+date = 2025-08-28
 [extra]
+subtitle = "Easy polymorphism with enums"
+kw = "Rust crate, open-source, nodyn, Frank Laranja, software, proc-macro, enum, polymorphism"
 github = "https://github.com/franklaranja/nodyn"
 crates_io = "https://crates.io/crates/nodyn"
 docs_rs = "https://docs.rs/nodyn"
@@ -9,18 +13,12 @@ menu_image = "menu-nodyn"
 menu_image_alt = "Detail of chromed gear with text nodyn!! inside"
 image = "nodyn_gear"
 image_alt = "Polymorphic gear"
-description = "A Rust proc-macro that makes polymorphism with enums easy."
-type = "Library"
+crate_type = "Library"
 version = "0.2.2"
 license = "MIT"
 tags = ["proc-macro", "enum", "polymorphism"]
+section = "code"
 +++
-
-<div align="center">
-
-*Easy polymorphism with enums*
-
-</div>
 
 `nodyn` provides a Rust macro for creating wrapper enums that
 encapsulate a fixed set of types with automatic implementations
@@ -225,6 +223,8 @@ values.push(JsonArray(json_value_vec![Null, false, 33.0]));
 for val in &values {
     println!("{}: {}", val.json_type_name(), val);
 }
+```
+
 
 ## Installation
 

@@ -1,38 +1,40 @@
 +++
 title = "Garnish your widgets"
-date = 2025-08-01
+date = 2025-10-01
 template = "article.html"
 [extra]
+subtitle = "Flexible, dynamic and type-safe composition in Rust"
+summary_a = "This article presents a novel “flat decorator” pattern that addresses limitations in traditional decorators and widget designs. It achieves composability without nesting or type explosion."
+summary = "This article explores composition patterns in Rust and demonstrates that composition using a wrapper which provides the combining functionality, allows for simple components to be arranged in flexible and dynamic ways."
+description = "An article about composition patterns in Rust, it demonstrates that composition using a wrapper which provides the combining functionality, allows for simple components to be arranged in flexible and dynamic ways."
+kw = "Rust design pattern, flat decorator, ratatui, tui, composition, blog"
 menu_image = "/images/menu-ratatui-garnish"
 menu_image_alt = "Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge"
-subtitle = "Dynamic, flexible and type-safe trait composition in Rust."
-summary = "This article presents a novel \"flat decorator\" pattern that addresses fundamental limitations in both traditional recursive decorators and current widget design approaches. Instead of nesting decorators within each other or embedding styling directly in widgets, the pattern stores all decorators in a single contiguous collection alongside the core component. Using enum polymorphism rather than trait objects or recursive structures, this approach achieves the composability benefits of the decorator pattern while avoiding type explosion, cache locality issues, and runtime inflexibility. The result is a type-safe, dynamic composition system that trades a small memory overhead for significant gains in code reusability, maintainability, and developer ergonomics—demonstrating how thoughtful use of Rust's type system can create more elegant solutions to common design pattern challenges."
+image = "garnish_almonds"
+image_alt = "almonds arranged in a flower pattern"
+section = "articles"
 +++
 
-<div align="center">
-
+<div class="center">
 {{ picture(src="garnish_rosemary", ext="png", alt="Decorative image of Rosemary garnish", class="w20") }}
 
-*Flexible, dynamic and type-safe composition in Rust*
-
 [skip to the code](https://github.com/franklaranja/ratatui-garnish)
-
 </div>
 
-Whilst writing new widgets for Ratatui, a Rust library for cooking up delicious 
+Whilst writing new widgets for *Ratatui*, a Rust library for cooking up delicious 
 TUIs (terminal user interfaces)
 {{ cite(authors="Ratatui Developers", year="2023", id="ref-ratatui2023") }}
 I experienced some repetitive
-coding involving `Style` and `Block` which ratatui widgets typically use to configure
+coding involving `Style` and `Block` which *Ratatui* widgets typically use to configure
 the colors, padding, border and title of a widget. The inclusion of `Style`
 and `Block` in every widget leads not only to repetitive code but also to complexity and inflexibility.
 
 Composition is the Rust way. But what should be
 composed of what? When composing two items, say a block and a widget,
-widget can contain block (as in Ratatui), block can contain widget or
+widget can contain block (as in *Ratatui*), block can contain widget or
 a new type can be created containing both.
 
-An additional pain point in the Ratatui API is that after setting a `Block`
+An additional pain point in the *Ratatui* API is that after setting a `Block`
 you lose access to it, making it impossible to check or modify `Block` after
 construction. I don't see good reasons for changing the visibility of public
 items, it sure is inconvenient and not user friendly.
@@ -45,7 +47,7 @@ It uses a flexible,
 dynamic and type-safe composition pattern for Rust. I found the result interesting
 and so wrote this article about it. I hope you find it interesting too!
 
-<div align="center">
+<div class="center">
 
 {{ picture(src="garnish_croutons", ext="png", alt="Decorative image of croutons garnish", class="w40") }}
 
@@ -53,10 +55,10 @@ and so wrote this article about it. I hope you find it interesting too!
 
 </div>
 
-A widget in Ratatui is something that implements one of the Widget traits
+A widget in *Ratatui* is something that implements one of the Widget traits
 `Widget`, `WidgetRef` or stateful versions of those. `Widget`'s render
 method simply calls `render_ref()` and then eats your widget. How rude! So 
-lets look at the implementation of `WidgetRef`. Many of Ratatui's widgets
+lets look at the implementation of `WidgetRef`. Many of *Ratatui*'s widgets
 follow this template:
 
 ```rust
@@ -124,7 +126,7 @@ it is a widget itself, it suddenly is possible to add two borders
 around the widget. Voilà! Now our widgets become like onions: 
 `(Style(Block(Paragraph)))`.
 
-<div align="center"> 
+<div class="center"> 
 {{ picture(src="widget_onion", ext="jpg", alt="A widget inside of an onion", class="photo w80") }}
 </div>
 
@@ -164,14 +166,14 @@ The gang continues about decorators:
 Hey, that complex, customizable class, that is the `Block` widget
 right there! And those simple pieces! Yummy! Gimme, gimme, gimme!
 
-<div align="center">
+<div class="center">
 {{ picture(src="garnish_parsley", ext="png", alt="Decorative image of garnish, a Parsley leaf", class="w20") }}
 
 ## Garnishing
 
 </div>
 
-Let's build decorators for our widgets. As they are Ratatui widgets,
+Let's build decorators for our widgets. As they are *Ratatui* widgets,
 we are not going to simply decorate them, we are going to *garnish* them.
 I'd like to avoid implementing all the variations of the `Widget`
 trait. Here is a trait to modify widgets:
@@ -213,7 +215,7 @@ as it implies a certain application. What we really doing is function
 composition using traits. And this is way more powerful than just decorating
 a widget with a border.
 
-<div align="center">
+<div class="center">
 {{ picture(src="garnish_flower", ext="png", alt="Decorative image of garnish, a flower", class="w20") }}
 
 ## Garnished Widgets
@@ -286,7 +288,7 @@ nodyn::nodyn! {
 }
 ```
 
-Note: `ratatui-garnish` also has a stateful version of
+Note: **ratatui-garnish** also has a stateful version of
 `GarnishedWidget` for `StatefulWidget`.
 
 <aside>
@@ -408,8 +410,8 @@ This setup is a bit more complex than the basic decorator, but this
 initial complexity and the leverage of traits
 makes the subsequent implementation of garnishes a breeze.
 
-<div align="center">
-{{ picture(src="garnish_cheese", ext="png", alt="Decorative image of garnish, grated cheese", class="w20") }}
+<div class="center">
+{{ picture(src="garnish_cheese", ext="png", alt="Decorative image of garnish, grated cheese", class="w35") }}
 
 ## Garnishable Widgets
 
@@ -433,11 +435,11 @@ let widget = Line::raw("Hello, World!")
  .garnish(Style::default().bg(Color::White)); // Background for the line
 ```
 
-As you can see with `ratatui-garnish`, you can easily turn the
-three blockless text widgets from Ratatui `Text`, `Line` and `Span`, into
+As you can see with **ratatui-garnish**, you can easily turn the
+three blockless text widgets from *Ratatui* `Text`, `Line` and `Span`, into
 full widgets with borders, padding & titles.
 
-<div align="center">
+<div class="center">
 {{ picture(src="garnish_basil", ext="png", alt="Decorative image of garnish, Basil leaves", class="w30") }}
 
 ## Garnishes
@@ -446,7 +448,7 @@ full widgets with borders, padding & titles.
 
 Now we start implementing garnishes, in the example above I used `Style` and `Block` as
 variants of the `Garnish` enum, so **ratatui-garnish** offers the same functionality
-as Ratatui, we implement `Garnish` for both:
+as *Ratatui*, we implement `Garnish` for both:
 
 ```rust
 impl Garnish for Style {
@@ -486,14 +488,14 @@ impl Garnish for Padding {
 }
 ```
 
-<div align="center">
-{{ picture(src="garnish_jullien1", ext="png", alt="Decorative image of garnish, vegetable jullien", class="w30") }}
+<div class="center">
+{{ picture(src="garnish_jullien1", ext="png", alt="Decorative image of garnish, vegetable jullien", class="w40") }}
 
 ## Available garnishes
 
 </div>
 
-Instead of `Block`, `ratatui-garnish` uses many simple garnishes
+Instead of `Block`, **ratatui-garnish** uses many simple garnishes
 to provide similar functionality. As this article's focus is on
 the design pattern used, I won't go over the implementation of
 all garnishes, but give a summary of the garnishes included in
@@ -513,7 +515,7 @@ version 0.1.0 (more garnishes are planned).
 - `Shadow` (light `░`, medium `▒`, dark `▓`, or full `█` shades with full-character offsets)
 - `HalfShadow` (full `█` or quadrant characters with half-character offsets)
 
-### Built-in Ratatui Support
+### Built-in *Ratatui* Support
 - `Style` (background colors, text styling)
 - `Padding` (spacing around the widget)
 
@@ -524,15 +526,15 @@ implement a garnish, implement one or more of the methods from
 have a look at the `Title<Top>` garnish from the title module, it renders
 *over* the top row of the widgets `Area`.
 
-<div align="center">
-{{ picture(src="garnish_mint", ext="png", alt="Decorative image of garnish, Mint leaves", class="w25") }}
+<div class="center">
+{{ picture(src="garnish_mint", ext="png", alt="Decorative image of garnish, Mint leaves", class="w35") }}
 
-## Garnishes
+## Garnishes collection
 
 </div>
 
 There are quite a number of garnishes! To make it easy to apply
-the same set of garnishes to multiple widgets, `ratatui-garnish` has a
+the same set of garnishes to multiple widgets, **ratatui-garnish** has a
 special `Vec<Garnish>` called `Garnishes`. As `GarnishedWidget`
 also acts as a `Vec<Garnish>` you can use its `extend_from_slice`
 and `extend` methods to add `Garnishes`:
@@ -563,21 +565,20 @@ let mut other_widget = Line::raw("Other widget")
 other_widget.extend(garnishes);
 ```
 
-A serializable `Garnishes` would make it easy
-to make Ratatui applications themeable.
-Regrettably I could not make `Garnishes` serializable with serde
-as the `Title` garnishes are a wrapper around
-`ratatui::text::Line` which doesn't implement `Serialize` and
-`Deserialize`. 
+All garnishes and `Garnishes` can implement `Serialize` and
+`Deserialize` from serde
+{{ cite(authors="Tryzelaar & Tolnay", year="2025", id="ref-tryzelaar2025") }}
+when you enable this feature of **ratatui-garnish**. This makes it easy to
+make your tui applications themable!
 
-<div align="center">
+<div class="center">
 {{ picture(src="garnish_roquefort", ext="png", alt="Decorative image of garnish, crumbled Roquefort", class="w45") }}
 
 ## Recipes
 
 </div>
 
-Here are some examples with screenshots of what you can do with ratatui-garnish.
+Here are some examples with screenshots of what you can do with **ratatui-garnish**.
 I only show the garnishes used, the complete code can
 be found in the examples directory in the github repo.
 
@@ -586,15 +587,7 @@ be found in the examples directory in the github repo.
 This example shows a combination of `Style` and `Padding`
 garnishes on a `ratatui::text::Line` widget.
 
-To run this example:
-
-```bash
-git clone http://github.com/franklaranja/ratatui-garnish
-cd ratatui-garnish
-cargo run --example padding
-```
-    
-<div align="center">
+<div class="center">
 {{ picture(src="padding", ext="jpg", alt="Screenshot of padding example", class="w80") }}
 </div>
 
@@ -630,13 +623,7 @@ garnishes![
 You can add any combination of borders to a widget, in this
 example it is again a `ratatui::text::Line`.
 
-To run this example:
-
-```bash
-cargo run --example borders
-```
-    
-<div align="center">
+<div class="center">
 {{ picture(src="borders", ext="jpg", alt="Screenshot of borders example", class="w80") }}
 </div>
 
@@ -665,13 +652,7 @@ This example shows the title garnishes, notice the difference
 between titles that reserve space (the triangles) and those
 that render over the border.
 
-To run this example:
-
-```bash
-cargo run --example titles
-```
-
-<div align="center">
+<div class="center">
 {{ picture(src="titles", ext="jpg", alt="Screenshot of titles example", class="w80") }}
 </div>
 
@@ -696,13 +677,7 @@ garnishes![
 Here we add a `Title::<Above>` and a `HalfShadow` to a
 `ratatui::widgets::Paragraph` widget.
 
-To run this example:
-
-```bash
-cargo run --example shadow
-```
-
-<div align="center">
+<div class="center">
 {{ picture(src="shadow", ext="jpg", alt="Screenshot of shadow example", class="w80") }}
 </div>
 
@@ -719,20 +694,109 @@ garnishes![
 ];
 ```
 
-<div align="center">
-{{ picture(src="garnish_almonds", ext="png", alt="Decorative image of garnish, Almonds", class="w35") }}
+<div class="center">
+{{ picture(src="garnish_veggies1", ext="png", alt="Decorative image of garnish, cubed vegtables arranged in a circle", class="w35") }}
 
-## Compositions compared
+## Desigining components for flexible composition
 
 </div>
 
-In this article we looked at three way to compose to types of
-structs (A and B) in Rust, 
+Separating functionality into simple components, just like
+with functions, makes it composition easier and flexible.
+For the flat decorator I separated the composition functionality
+from both the widgets (The *Ratatui* way) and the garnishes
+(Traditional decorators) into a new type `GarnishedWidget`,
+simplifying both.
 
-1. Include struct B in struct A. (Style & Block in ratatui Widgets)
-2. Include struct A in struct B. (Traditional decorator pattern)
-3. Include struct A and B in struct C. (ratatui-garnish)
+For the next section which compares the different composition
+patterns, I wanted to run some benchmarks but I didn't like
+to write traditional decorators. Instead I wrote a new type that
+mimics traditional decorators but uses garnishes:
 
+```rust
+#[derive(Debug, Deref, DerefMut)]
+pub struct DecoratedWidget<W, G> {
+    #[deref]
+    #[deref_mut]
+    pub widget: W,
+    pub garnish: G,
+}
+```
+
+It implements `Widget` and has a function `decorate` that wraps
+itself into a new `DecoratedWidget` with the garnish provided.
+The `GarnishableWidget` widget extension trait also provides
+a decorate function.
+
+```rust
+use ratatui::{style::{Color, Style}, text::Text}};
+use ratatui_garnish::{
+    border::PlainBorder,
+    title::{Title, Top},
+    GarnishableWidget, Padding,
+};
+
+let benchmark_widget = Text::raw("Hello World!")
+    .decorate(Style::default().fg(Color::Red).bg(Color::White))
+    .decorate(Title::<Top>::raw("Paragraph").margin(1))
+    .decorate(PlainBorder::default())
+    .decorate(Padding::horizontal(2));
+```
+
+Ain't flexibility great! Now I can run some benchmarks that only
+compare the two composition patterns as the widgets and
+garnishes are exactly the same. 
+
+<div class="center">
+{{ picture(src="garnish_almonds", ext="png", alt="Decorative image of garnish, Almonds", class="w35") }}
+
+## Composition patterns compared
+
+</div>
+
+In this article we looked at three way of type composition in
+Rust: the *Ratatui* way of including decorators (`Style` and
+`Block`) directly in widgets, the traditional decorator pattern
+which includes widgets in decorators, and the flat decorator
+which combines a widget with decorators in a new type. Each
+approach has distinct trade-offs in type safety, flexibility,
+performance, maintainability, and developer ergonomics.
+
+| Criteria        | Ratatui Way | Traditional Decorator | Flat Decorator |
+|-----------------|-------------|-----------------------|----------------|
+| **Type Safety**     | High        | High or Moderate (trait objects) | High |
+| **Flexibility**     | Low         | High                  | Very High      |
+| **Performance**     | Good        | Good or Poor (trait objects) | Good    | 
+| **Maintainability** | Low         | Moderate              | High           |
+| **Ergonomics**      | Poor        | Moderate              | Excellent      |
+
+
+The description of each approach includes
+an example diagram based on the *Ratatui* `Paragraph` widget, as the
+decorator patterns don't need to include `Style` and `Block` the
+examples use an imaginary type `WrappedText` with `Style` and
+`Block` removed. To simplify the diagrams the field types `Option`
+and `Vec` do not include these structs in but their
+contained types. These fields are
+indicated with the type in parenthesis after the field name and a colored bar
+in front of the field. Generics and trait objects, which are
+similarly marked¸ have concrete types. Primitives are
+dark-orange, structs are blue, enums green and tuples purple.
+
+I have included benchmark statistics for each approach created
+with criterion {{ cite(authors="Apericio & Heisler", year="2025", id="ref-apericio2025") }}. The decorator patterns used a `Text` widget with
+similar decorators
+as used to construct the `Paragraph` widget for the Ratatui way
+benchmark. The benchmark is for creating the widget with garnish
+and rendering to a *Ratatui* `Buffer`. You can find the benchmark
+code in the benches directory of the **ratatui-garnish** repo.
+The traditional decorator was a little bit faster and the flat
+decorator a little bit slower than the *Ratatui* approach.
+
+### The **Ratatui** way
+
+<div class="columns">
+<div class="column">
 <div class="struct diagram">
     <div class="struct-name">Paragraph</div>
     <ul class="fields">
@@ -838,41 +902,143 @@ structs (A and B) in Rust,
             </div>
         </li>
     </ul>
+</div></div>
+
+<div class="column">
+
+*Ratatui* widgets embed an optional `Block` and a `Style` to handle
+borders, padding, titles, and styling. As these concrete types are included
+directly this approach is performant and type safe. However, this approach
+leads to to repetitive code, increased complexity (have a look at
+the code of the *Ratatui* `block` module), and poor maintainability, as adding
+new decorations requires modifying every widget or changing
+`Block`. It is also inflexible, decorations like borders and
+padding are rendered in a fixed sequence. The poor developer ergonomics
+are made worse by making `Block` private within widgets. Support
+for functionality like scrolling and other widget interactions
+is hard to do this way, and support for this in *Ratatui* is
+minimal or non-existent.
+
+#### Benchmark Statistics
+
+<img src="ratatui_way_pdf_small.svg" alt="Benchmark graph pdf
+    plot">
+
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th title="0.95 confidence level" class="ci-bound">Lower bound</th>
+            <th>Estimate</th>
+            <th title="0.95 confidence level" class="ci-bound">Upper bound</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Slope</td>
+            <td class="ci-bound">14.112 µs</td>
+            <td>14.114 µs</td>
+            <td class="ci-bound">14.116 µs</td>
+        </tr>
+        <tr>
+            <td>R&#xb2;</td>
+            <td class="ci-bound">0.9999534</td>
+            <td>0.9999555</td>
+            <td class="ci-bound">0.9999528</td>
+        </tr>
+        <tr>
+            <td>Mean</td>
+            <td class="ci-bound">14.113 µs</td>
+            <td>14.117 µs</td>
+            <td class="ci-bound">14.122 µs</td>
+        </tr>
+        <tr>
+            <td title="Standard Deviation">Std. Dev.</td>
+            <td class="ci-bound">9.8292 ns</td>
+            <td>22.885 ns</td>
+            <td class="ci-bound">33.877 ns</td>
+        </tr>
+        <tr>
+            <td>Median</td>
+            <td class="ci-bound">14.111 µs</td>
+            <td>14.113 µs</td>
+            <td class="ci-bound">14.114 µs</td>
+        </tr>
+        <tr>
+            <td title="Median Absolute Deviation">MAD</td>
+            <td class="ci-bound">5.3554 ns</td>
+            <td>8.2944 ns</td>
+            <td class="ci-bound">10.455 ns</td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
 </div>
 
-### Decorator pattern in Rust
+### Traditional Decorator
 
-In Rust the decorator pattern consists of a trait, objects
-implementing the trait and wrappers (decorators) modifying
-the trait. The decorators typically use either generics {{
-cite( id="ref-snoek2023", authors="Snoek, I.", year="2023") }}
-or trait objects {{ cite(authors="lpxxn", year="2025",
-id="ref-lpxxn2025") }} and green tea , to wrap the objects.
-
-See {{ cite(authors="Drysdale, D.", year="2024",
-id="ref-drysdale2024") }} for a comparison of generics with
-trait objects.
-
+<div class="columns">
+<div class="column">
 <div class="struct diagram">
     <div class="struct-name">Style</div>
     <ul class="fields">
         <li><div class="field-name">style fields...</div></li>
-        <li class="trait-object-field">
-            <div class="field-name">widget</div>
+        <li class="option-field">
+            <div class="field-name">fg</div>
             <div class="struct">
-                <div class="struct-name">Border</div>
-                <ul class="fields">
-                    <li><div class="field-name">border fields...</div></li>
-                    <li class="trait-object-field">
+                <div class="struct-name">Color</div>
+            </div>
+        </li>
+        <li class="option-field">
+            <div class="field-name">bg</div>
+            <div class="struct">
+                <div class="struct-name">Color</div>
+            </div>
+        </li>
+        <li class="option-field">
+            <div class="field-name">underline_color</div>
+            <div class="struct">
+                <div class="struct-name">Color</div>
+            </div>
+        </li>
+        <li><div class="field-name">add_modifier</div>
+        <div class="struct">
+            <div class="struct-name">Modifier</div>
+        </div></li>
+        <li><div class="field-name">sub_modifier</div>
+        <div class="struct">
+            <div class="struct-name">Modifier</div>
+        </div></li>
+        <li class="trait-object-field">
                         <div class="field-name">widget</div>
                         <div class="struct">
                             <div class="struct-name">Padding</div>
                             <ul class="fields">
-                                <li><div class="field-name">padding fields...</div></li>
+                                <li>
+                                    <div class="field-name">left</div>
+                                    <div class="primitive">
+                                        <div class="primitive-name">u16</div>
+                                    </div>
+                                </li><li>
+                                    <div class="field-name">right</div>
+                                    <div class="primitive">
+                                        <div class="primitive-name">u16</div>
+                                    </div>
+                                </li><li>
+                                    <div class="field-name">top</div>
+                                    <div class="primitive">
+                                        <div class="primitive-name">u16</div>
+                                    </div>
+                                </li><li>
+                                    <div class="field-name">bottom</div>
+                                    <div class="primitive">
+                                        <div class="primitive-name">u16</div>
+                                    </div></li>
                                 <li class="trait-object-field">
                                     <div class="field-name">widget</div>
                                     <div class="struct">
-                                        <div class="struct-name">Paragraph</div>
+                                        <div class="struct-name">WrappedText</div>
                                         <ul class="fields">
                                             <li class="option-field">
                                                 <div class="field-name">wrap</div>
@@ -903,20 +1069,117 @@ trait objects.
                                 </li>
                             </ul>
                         </div>
-                    </li>
-                </ul>
-            </div>
         </li>
     </ul>
 </div>
+</div>
+<div class="column">
 
+In Rust the decorator pattern consists of a trait, objects
+implementing the trait and wrappers (decorators) modifying
+the trait. The decorators typically use either generics {{
+cite( id="ref-snoek2023", authors="Snoek, I.", year="2023") }}
+or trait objects {{ cite(authors="lpxxn", year="2025",
+id="ref-lpxxn2025") }} and {{ cite(authors="Green Tea Coding", year="2025", id="ref-greentea2025") }},
+to wrap the objects. The diagram shows an example using trait
+objects, the diagram for decorators using generics would lead
+to a similar recursive pattern.
+
+Depending on the number of decorators and widgets used, generics
+can lead to an explosion of structs, increased compile times and
+bigger code. With trait objects however you get type erasure,
+and a heap allocation for each widget or decorator. For a more
+comprehensive comparison see {{ cite(authors="Drysdale, D.", year="2024",
+id="ref-drysdale2024") }},  {{ cite(authors="Gjengset, J.", year="2022",
+id="ref-gjengset2022") }} and {{ cite(authors="Blandy et al", year="2021",
+id="ref-blandy2021") }}.
+
+The performance of decorators using generics would be better than
+those using trait objects.
+Maintainability is better than the *Ratatui* way, although
+in the case of *Ratatui* decorators you need to create a version for regular and
+stateful widgets, with each needing two traits (`Widget` and
+`WidgetRef`). Flexibility is also better as decorators can be
+added in any number and order desired. The developer ergonomics
+are mixed. Accessing or modifying inner decorators
+or the widget is cumbersome due to the recursive chain, and when using trait
+objects for wrapping even worse due to type erasure. 
+When using generics type signature becomes unwieldy, e.g.
+`Style<PlainBorder<Padding<Paragraph>>>`. 
+
+In the previous section I described alternative approach for
+implementing traditional decorators in Rust using generics
+for the decorator part too. I used that to generate the
+benchmarks. It also simplifies implementing decorators. 
+
+#### Benchmark Statistics
+
+<img src="traditional_decorator_pdf_small.svg" alt="Benchmark graph pdf
+    plot">
+
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th taitle="0.95 confidence level" class="ci-bound">Lower bound</th>
+            <th>Estimate</th>
+            <th title="0.95 confidence level" class="ci-bound">Upper bound</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Slope</td>
+            <td class="ci-bound">13.112 µs</td>
+            <td>13.113 µs</td>
+            <td class="ci-bound">13.114 µs</td>
+        </tr>
+        <tr>
+            <td>R&#xb2;</td>
+            <td class="ci-bound">0.9999858</td>
+            <td>0.9999865</td>
+            <td class="ci-bound">0.9999858</td>
+        </tr>
+        <tr>
+            <td>Mean</td>
+            <td class="ci-bound">13.113 µs</td>
+            <td>13.115 µs</td>
+            <td class="ci-bound">13.118 µs</td>
+        </tr>
+        <tr>
+            <td title="Standard Deviation">Std. Dev.</td>
+            <td class="ci-bound">7.7846 ns</td>
+            <td>13.318 ns</td>
+            <td class="ci-bound">18.658 ns</td>
+        </tr>
+        <tr>
+            <td>Median</td>
+            <td class="ci-bound">13.112 µs</td>
+            <td>13.114 µs</td>
+            <td class="ci-bound">13.115 µs</td>
+        </tr>
+        <tr>
+            <td title="Median Absolute Deviation">MAD</td>
+            <td class="ci-bound">3.6286 ns</td>
+            <td>6.0591 ns</td>
+            <td class="ci-bound">7.2340 ns</td>
+        </tr>
+    </tbody>
+</table>
+
+
+</div></div>
+
+### Flat Decorator
+
+<div class="columns">
+<div class="column">
 <div class="struct diagram">
     <div class="struct-name">GarnishedWidget</div>
     <ul class="fields">
         <li class="generic-field">
             <div class="field-name">widget</div>
             <div class="struct">
-                <div class="struct-name">Paragraph</div>
+                <div class="struct-name">WrappedText</div>
                 <ul class="fields">
                     <li class="option-field">
                         <div class="field-name">wrap</div>
@@ -957,44 +1220,162 @@ trait objects.
                         </div>
                     </li>
                     <li>
-                        <div class="variant-name">Border</div>
-                    </li>
-                    <li>
-                        <div class="variant-name">Title</div>
-                    </li>
-                    <li>
                         <div class="variant-name">Padding</div>
+                        <div class="struct">
+                            <div class="struct-name">Padding</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="variant-name">PlainBorder</div>
+                        <div class="struct">
+                            <div class="struct-name">PlainBorder</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="variant-name">TitleAbove</div>
+                        <div class="struct">
+                            <div class="struct-name">Title&lt;'a, Above&gt;</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="variant-name">other variants...</div>
                     </li>
                 </ul>
             </div>
         </li>
     </ul>
 </div>
+</div>
+<div class="column">
 
-<div align="center"><img src="garnish_lemon.png" alt="Lemon curl"  width="150"/>
+In this article I introduced the flat decorator pattern that
+I used to write the **ratatui-garnish** crate. This pattern
+composes widgets and decorators by wrapping them in a new type
+(`GarnisedWidget` and `GarnishedStatefulWidget`). The decorators
+have their own trait (`RenderModifier`) which gets combined width
+the `Widget` and friends traits in `GarnishedWidget`. All
+decorators are contained within a single `Vec` using `enum`
+polymorphism. The `enum` adds a bit of memory overhead and extra
+logic (variant matching), it is generated using the nodyn macro
+which icreases compilation time. But the `Vec` provides a familiar and
+easy API to manipulate the decorators. The `garnishes!` macro and 
+`GarnishableWidget` trait offer a fluent API, enhancing developer
+ergonomics even more. Maintainability is much improved, both for
+widgets (just like the traditional decorators) but the decorators
+as well as they don't need to wrap a widget and only need to
+implement `RenderModifier`. Maintaining the new type
+(`GarnishedWidget`) is easy thanks to the `nodyn!` macro.
+
+#### Benchmark Statistics
+
+<img src="flat_decorator_pdf_small.svg" alt="Benchmark graph pdf
+    plot">
+
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th title="0.95 confidence level" class="ci-bound">Lower bound</th>
+            <th>Estimate</th>
+            <th title="0.95 confidence level" class="ci-bound">Upper bound</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Slope</td>
+            <td class="ci-bound">15.860 µs</td>
+            <td>15.861 µs</td>
+            <td class="ci-bound">15.863 µs</td>
+        </tr>
+        <tr>
+            <td>R&#xb2;</td>
+            <td class="ci-bound">0.9999660</td>
+            <td>0.9999678</td>
+            <td class="ci-bound">0.9999658</td>
+        </tr>
+        <tr>
+            <td>Mean</td>
+            <td class="ci-bound">15.861 µs</td>
+            <td>15.864 µs</td>
+            <td class="ci-bound">15.868 µs</td>
+        </tr>
+        <tr>
+            <td title="Standard Deviation">Std. Dev.</td>
+            <td class="ci-bound">9.6348 ns</td>
+            <td>19.040 ns</td>
+            <td class="ci-bound">27.841 ns</td>
+        </tr>
+        <tr>
+            <td>Median</td>
+            <td class="ci-bound">15.860 µs</td>
+            <td>15.862 µs</td>
+            <td class="ci-bound">15.863 µs</td>
+        </tr>
+        <tr>
+            <td title="Median Absolute Deviation">MAD</td>
+            <td class="ci-bound">6.5498 ns</td>
+            <td>8.4261 ns</td>
+            <td class="ci-bound">10.747 ns</td>
+        </tr>
+    </tbody>
+</table>
+
+</div></div>
+
+<div class="center">
+{{ picture(src="garnish_lemon", ext="png", alt="Decorative image of garnish, curl of lemon rind", class="w45") }}
 
 ## Flat Decorator Pattern
 
 </div>
 
-The flat decorator pattern that I described here seems a useful composition
-pattern for Rust. When implemented using enum polymorphism, it offers a type-safe,
-flexible and dynamic solution. Being capable of more than decorating widgets,
-maybe composite trait modifier is a better name for this powerful pattern. The closest
-pattern that I could find in Rust is the middleware pattern used by Axum
-{{ cite(authors="Tokio Developers", year="2025", id="ref-tokio2025") }},
-which is based on closures.
+The flat decorator that I described here, resulted from creating
+a new type to handle the composition. The components, in
+**ratatui-garnish** widgets and decorators, only handle what they need
+to, which makes them simpler, which improves maintainability and
+development of new components. I came to this solution by
+focusing on ways to simplify the components, I was not looking
+for a pattern. The result offers additional additional benefits:
+flexibility and great ergonomics. I expect that the dynamic
+nature of this solution not only makes theme support for tui
+applications easier but improving other ux features of tui
+applications as well.
+
+When I am writing a library it is often hard to image different
+usage scenarios, and which composition pattern has the
+best trade-offs. Splicing the composition functionality into a
+new type makes it easy to cater to different needs.
+**Ratatui-garnish** offers the flat decorator for complex and
+dynamic tuis and when each micro second counts it has a
+traditional decorator for you.
 
 When you find good use for this pattern I would like to hear about it!
 
 <section role="doc-bibliography">
 
-<div align="center"><img src="garnish_chives.png" alt="Chives"  width="150"/>
+<div class="center">
+
+{{ picture(src="garnish_chives", ext="png", alt="Decorative image of garnish, chopped chive pieces", class="w40") }}
 
 ## References
 
 </div>
 
+- {{ reference(
+    id="ref-apericio2025",
+    authors="Apericio, J., & Heisler, B.",
+    year="2025",
+    title="Criterion: Statistics-driven micro-benchmarking library",
+    source_type="website",
+    url="https://bheisler.github.io/criterion.rs/book/index.html" )}}
+- {{ reference(
+       id="ref-blandy2021",
+       authors="Blandy, J., Orendorff, J., & Tindall, L.F.S.",
+       year="2021",
+       title="Programming Rust, 2nd edition",
+       source_type="book",
+       publisher="O'Reilly Media", 
+       note="Chapter 11. Traits and Generics" ) }}
 - {{ reference(
        id="ref-drysdale2024",
        authors="Drysdale, D.",
@@ -1018,6 +1399,22 @@ When you find good use for this pattern I would like to hear about it!
        source_type="book",
        publisher="Addison-Wesley", 
        note="Defines the traditional decorator pattern" ) }}
+- {{ reference(
+       id="ref-gjengset2022",
+       authors="Gjengset, J.",
+       year="2022",
+       title="Rust for Rustaceans: Idiomatic Programming for Experienced Developers",
+       source_type="book",
+       publisher="No Starch Press", 
+       note="Chapter 2. Types" ) }}
+- {{ reference(
+       id="ref-greentea2025",
+       authors="Green Tea Coding",
+       year="2025",
+       title="Flexible Design with the Decorator Pattern in Rust: A Deep Dive",
+       source_type="youtube",
+       url="https://m.youtube.com/watch?v=T24b1-n1bRE",
+       note="Rust decorator pattern using trait objects" )}}
 - {{ reference(
        id="ref-klabnik2025",
        authors="Klabnik, S., Nichols, C., & Krycho, C.",
@@ -1071,5 +1468,11 @@ When you find good use for this pattern I would like to hear about it!
        title="axum",
        source_type="crate",
        url="https://crates.io/crates/axum" )}}
- 
+- {{ reference(
+    id="ref-tryzelaar2025",
+    authors="Tryzelaar, E. & Tolnay, D.",
+    year="2025",
+    title="Serde: A generic serialization/deserialization framework",
+    source_type="website",
+    url="https://serde.rs" )}}
 </section>

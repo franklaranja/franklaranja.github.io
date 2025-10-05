@@ -1,7 +1,11 @@
 +++
 title = "ratatui-garnish"
 template = "code.html"
+description = "A Rust library providing a powerful composition system for Ratatui widgets."
+date = 2025-10-01
 [extra]
+subtitle = "Garnish your Ratatui Widgets"
+kw = "Rust crate, open-source, ratatui-garnish, ratatui, tui, text user interface, software, library"
 github = "https://github.com/franklaranja/ratatui-garnish"
 crates_io = "https://crates.io/crates/ratatui-garnish"
 docs_rs = "https://docs.rs/ratatui-garnish"
@@ -9,18 +13,12 @@ menu_image = "/images/menu-ratatui-garnish"
 menu_image_alt = "Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge"
 image = "basil"
 image_alt = "basil sprig"
-description = "A powerful composition system for Ratatui widgets."
-type = "Library"
+crate_type = "Library"
 version = "0.1.0"
 license = "MIT"
 tags = ["Ratatui", "tui", "decorator", "widgets"]
+section = "code"
 +++
-
-<div align="center">
-
-*Garnish your Ratatui Widgets*
-
-</div>
 
 `ratatui-garnish` is a powerful composition system for [Ratatui](https://ratatui.rs) widgets,
 allowing you to change de rendering of any widget with garnishes like borders, titles, shadows,
