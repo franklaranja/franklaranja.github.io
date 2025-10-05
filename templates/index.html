@@ -1,23 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <header>
-        <div class="hero">
-            <picture>
-               <source srcset="/images/menu-laranja-shop2.avif" type="image/avif">
-               <source srcset="/images/menu-laranja-shop2.webp" type="image/webp">
-               <img src="/images/menu-laranja-shop2.jpg" alt="A cyberpunk smidth forging a glowing 'R' gear in a neon-lit workshop overlooking a futuristic city">
-            </picture>
-            <nav class="menu">
-                <a href="/articles" class="nav-button">Articles</a>
-                <a href="/code" class="nav-button">Code</a>
-                <a href="/contact" class="nav-button">Contact</a>
-                <a href="/about" class="nav-button">About</a>
-            </nav>
-            <h1 class="site-title">Laranja's Rust Shop</h1>
-        </div>
-    </header>
-    <main>
         <section>
           {{ section.content | safe }}
         </section>
@@ -25,18 +8,71 @@
         <section class="news-carousel">
           {% set new = load_data(path="data/new.toml", format="toml") %}
           <div class="news-item">
-              <div align="center"><img src="images/rust-logo.svg" alt="Rust logo"></div>
+              <div align="center"><img src="images/rust-logo.svg" alt="Rust Programming Language logo" width="200"></div>
           </div>
           {% for news in new.item | sort(attribute="date") | reverse %}
             <div class="news-item card">
-              <h2>{{ news.title }}</h2>
-              <p>{{ news.description }}</p>
+              <div class="corners"><div>{{news.type}}</div><div>{{news.date}}</div></div>
+    <p class="center"><picture>
+        <source srcset="{{ news.link | safe }}{{ news.image }}.avif" type="image/avif">
+        <source srcset="{{ news.link | safe }}{{ news.image }}.webp" type="image/webp">
+        <img src="{{ news.link | safe}}{{ news.image }}.png" alt="{{ news.image_alt | default(value='Icon for ' ~ page.title) }}" class="page.image">
+    </picture></p>
+    <h2>{{ news.title }} <span class="subtitle">{{ news.subtitle }}</span></h2>
               {% if news.link %}
-              <p><a href="{{ news.link | safe }}">Learn More</a></p>
+              <p><a href="{{ news.link | safe }}" >Learn More</a></p>
               {% endif %}
             </div>
           {% endfor %}
         </section>
-    </main>
+<script>
+// Auto-adjust carousel height to fit tallest card
+function setCarouselHeight() {
+  const carousel = document.querySelector('.news-carousel');
+  const items = document.querySelectorAll('.news-item');
+
+  if (!carousel || items.length === 0) return;
+  
+  let maxHeight = 0;
+  
+  // Temporarily make all items visible to measure their height
+  items.forEach(item => {
+    const originalStyle = {
+      position: item.style.position,
+      opacity: item.style.opacity,
+      transform: item.style.transform
+    };
+    
+    // Make visible for measurement
+    item.style.position = 'relative';
+    item.style.opacity = '1'
+    item.style.transform = 'translateX(0)';
+    
+    const height = item.offsetHeight;
+    if (height > maxHeight) {
+      maxHeight = height;
+    }
+
+    // Restore original styles
+    item.style.position = originalStyle.position;
+    item.style.opacity = originalStyle.opacity;
+    item.style.transform = originalStyle.transform;
+  });
+  
+  // Set the carousel height
+  maxHeight += 120;
+  carousel.style.minHeight = `${maxHeight}px`;
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', setCarouselHeight);
+
+// Re-calculate on window resize
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(setCarouselHeight, 250);
+});
+</script>
 {% endblock content %}
 

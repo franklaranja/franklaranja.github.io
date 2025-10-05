@@ -38,6 +38,7 @@
   --background-color: var(--blue-900);
   --text-color: var(--orange-50);
   --link-color: var(--blue-400);
+  --selected-link-color: var(--blue-200);
   --visited-color: var(--blue-100);
   --error-color: #ff7070;
   --accent-color: var(--green-400);
@@ -99,16 +100,21 @@ $breakpoints: (
   text-align: center;
 }
 
-@mixin button-base($bg-color, $text-color: var(--link-color)) {
-  font-family: var(--interface-font);
-  font-size: var(--s0);
-  font-weight: 700;
-  display: block;
-  background-color: rgba($bg-color / 0.5);
+@mixin rounded-box($bg-color, $text-color) {
+  background-color: rgb($bg-color);
   color: rgb($text-color);
   padding: var(--s-5) var(--s-2);
   border: 1px solid rgb($text-color);
   border-radius: var(--s-2);
+}
+
+@mixin button-base($bg-color, $text-color: var(--link-color)) {
+  @include rounded-box($bg-color, $text-color);
+  background-color: rgba($bg-color / 0.5);
+  font-family: var(--interface-font);
+  font-size: var(--s0);
+  font-weight: 700;
+  display: block;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -125,10 +131,10 @@ $breakpoints: (
   text-shadow: 2px 0 var(--s-2) rgba($shadow-color / 0.7);
 }
 
-@mixin card($padding: var(--s1), $border-width: 1px) {
+@mixin card($padding: var(--s1), $border-width: 1px, $border-radius: var(--s-1)) {
   padding: $padding;
   border: $border-width solid; 
-  border-radius: var(--s-1);
+  border-radius: $border-radius;
   background-clip: padding-box;
 }
 
@@ -153,7 +159,7 @@ $breakpoints: (
 @layer reset {
   *,
   *::before,
-  *::after {
+  *::after {  
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -179,46 +185,66 @@ $breakpoints: (
     accent-color: rgb(var(--accent-color));
     background-color: rgb(var(--background-color));
     color: rgb(var(--text-color));
-    @include stack(var(--s2));
-    @include center();
     margin-bottom: var(--s1);
   }
 
   // Typography hierarchy
   %heading-base {
     font-family: var(--heading-font);
-    color: rgb(var(--orange-100));
+    color: rgb(var(--orange-400));
     letter-spacing: var(--s-5);
+    font-weight: 600;
     margin-block: 0;
+
+    .subtitle {
+      display: block
+    }
   }
 
   h1 {
     @extend %heading-base;
     font-size: clamp(var(--s1), 4vw, var(--s3));
-    color: rgb(var(--orange-500));
+    color: rgb(var(--orange-100));
     text-align: center;
     letter-spacing: var(--s-4);
+
+    .subtitle {
+      font-weight: 400;
+      color: rgb(var(--orange-300));
+      font-size: var(--s0);
+      margin-top: var(--s-6)
+    }
   }
 
   h2 {
     @extend %heading-base;
     font-size: clamp(var(--s0), 3vw, var(--s2));
-    color: rgb(var(--orange-400));
+    color: rgb(var(--orange-200));
     letter-spacing: var(--s-4);
   }
 
   h3 {
     @extend %heading-base;
-    font-size: clamp(var(--s-1), 2.5vw, var(--s1));
-    color: rgb(var(--orange-400));
-  }
-
-  h4, h5 {
-    @extend %heading-base;
+    font-size: clamp(var(--s0), 2.5vw, var(--s2));
     color: rgb(var(--orange-300));
   }
 
-  p {
+  h4, h5, h6 {
+    @extend %heading-base;
+    font-family: var(--main-font);
+    color: rgb(var(--orange-400));
+  }
+
+  h5, h6 {
+    font-weight: 400;
+    color: rgb(var(--orange-500));
+  }
+
+  h5 {
+    font-style: italic;
+  }
+
+  p, section, main {
     margin-block: 0;
   }
 
@@ -310,20 +336,83 @@ $breakpoints: (
       margin: var(--s1);
     }
   }
+
+  table {
+    overflow-x: auto;
+    margin-inline: auto;
+    width: max-content;
+    border-collapse: collapse;
+    font-size: var(--s-1);
+
+    th {
+        background-color: rgb(var(--orange-400));
+        font-family: var(--interface-font);
+        letter-spacing: var(--s-4);
+        color: rgb(var(--background-color));
+        border: 1px solid rgb(var(--background-color));
+        padding: var(--s-4);
+    }
+
+    td {
+        background-color: rgb(var(--orange-800));
+        border: 1px solid rgb(var(--background-color));
+        padding: var(--s-4);
+    }
+  }
 }
 
 // ============================================================================
 // UTILITY CLASSES
 // ============================================================================
 
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  padding: var(--s-1);
+  background: rgb(var(--blue-900));
+  color: rgb(var(--orange-100));
+  z-index: 1000;
+  &:focus {
+    top: 0;
+  }
+}
+
 .neon {
   @include neon-glow;
 }
 
+.center {
+  @include center-text;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  & > * {
+    margin-block: 0;
+    
+    &:not(:first-child) {
+      margin-block-start: var(--s2);
+    }
+  }
+  * {
+    width: 100%;
+    margin-inline: auto; 
+  }
+}
+
+.full-width {
+  width: 100%;
+  max-width: 100%;
+}
+
 .badge {
-  @include button-base(var(--green-400), var(--blue-900));
+  @include rounded-box(var(--green-500), var(--background-color));
+  font-weight: 700;
   font-size: var(--s-1);
-  border: 1px solid rgb(var(--green-900));
+  &.badge-type { background: rgb(var(--purple-600)); }
+  &.badge-version { background: rgb(var(--orange-600)); }
+  &.badge-license { background: rgb(var(--blue-600)); }
+  &.badge-tag { background: rgb(var(--green-600)); }
 }
 
 .stack {
@@ -338,7 +427,22 @@ $breakpoints: (
   .w#{$i * 5} { max-width: #{$i * 5%}; }
 }
 
+.columns {
+  @include cluster(var(--s2), stretch, start);
 
+  .column {
+    @include stack(var(--s2));
+    flex: 1;
+  }
+}
+
+.date {
+  font-family: var(--interface-font);
+  font-size: var(--s-1);
+  color: rgb(var(--blue-600));
+  text-align: right;
+  width: 100%;
+}
 // ============================================================================
 // LAYOUT COMPONENTS
 // ============================================================================
@@ -346,63 +450,73 @@ $breakpoints: (
 @layer header {
   header {
     position: relative;
-    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    margin-bottom: var(--s2);
   }
 
   .hero {
-    position: relative;
-    width: 100%;
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: var(--s0);
+    /* position: relative; */
+    /* width: 100%; */
+    /* max-width: var(--max-width); */
+    /* padding: var(--s0); */
     
     img {
       width: 100%;
       max-width: var(--max-width);
-      border-radius: var(--s-1);
+      border-radius: var(--s-4);
     }
+  }
+
+  .header-text {
+      @include cluster(var(--s0), space-between, start);
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      /* padding-block-start: var(--s0); */
   }
 
   .menu {
-    position: absolute;
-    top: var(--s2);
-    left: var(--s3);
-    @include stack(var(--s-2));
-    
-    @media (max-width: map-get($breakpoints, medium)) {
-      top: var(--s1);
-      left: var(--s2);
-    }
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--s0);
+    height: 100%;
   }
 
   .nav-button {
-    @include shadowed-button(var(--blue-900), var(--green-400));
+    @include shadowed-button(var(--background-color), var(--accent-color));
     font-size: clamp(calc(0.9 * var(--s-1)), 2.5vw, var(--s1));
 
     &:visited {
-      color: rgb(var(--blue-400));
+      color: rgb(var(--link-color));
       font-weight: 600;
     }
 
     &:hover,
     &:focus,
     &.selected {
-      color: rgb(var(--blue-200));
-      border-color: rgb(var(--blue-100));
-      box-shadow: 0 0 var(--s-2) rgb(var(--blue-400));
+      color: rgb(var(--selected-link-color));
+      border-color: rgb(var(--visited-color));
+      box-shadow: 0 0 var(--s-2) rgb(var(--link-color));
+    }
+
+    &.part-of {
+      color: rgb(var(--selected-link-color));
+      border-color: rgb(var(--visited-color));
     }
   }
 
   .site-title {
     font-family: var(--heading-font);
     font-weight: 300;
-    position: absolute;
-    top: var(--s1);
-    right: var(--s2);
     color: rgb(var(--orange-200));
     font-size: clamp(var(--s0), 3vw, var(--s2));
-    text-shadow: 0 0 var(--s-5) rgba(var(--blue-900) / 0.7);
+    text-shadow: 1px 1px 2px rgb(var(--background-color));
     letter-spacing: var(--s-6);
+    padding-right: var(--s-1);
 
     a {
       &:link, &:visited {
@@ -417,6 +531,8 @@ $breakpoints: (
     margin-inline: var(--s2);
     
     > section {
+      margin-inline: auto;
+      max-width: var(--max-width);
       @include stack(var(--s2));
       display: flow-root;
     }
@@ -425,16 +541,20 @@ $breakpoints: (
 
 @layer footer {
   footer {
+    max-width: min(calc(0.85 * var(--max-width)), 70vw);
+    margin-inline: auto;
     @include stack(var(--s-3));
     align-items: center;
     color: rgb(var(--orange-400));
     font-family: var(--interface-font);
     letter-spacing: var(--s-5);
     font-size: var(--s-1);
+    margin-block-start: var(--s1);
 
     h3 {
       margin-top: calc(-1 * var(--s-2));
       font-size: var(--s0);
+      @include neon-glow;
 
       a {
         &:link, &:visited {
@@ -445,14 +565,22 @@ $breakpoints: (
 
     a {
       &:link, &:visited {
-        color: rgb(var(--blue-400));
+        color: rgb(var(--link-color));
         width: 100%;
       }
+
+    &.selected {
+      color: rgb(var(--selected-link-color));
+    }
+
+    &.part-of {
+      color: rgb(var(--blue-300));
+      @include neon-glow;
+    }
     }
 
     .flourish {
       opacity: 0.7;
-      width: 70%;
       max-width: 100%;
     }
   }
@@ -468,13 +596,19 @@ $breakpoints: (
     max-width: var(--max-width);
   }
 
-  .crate-image {
-    width: auto;
-    height: 120px;
-  }
+
+
+  /* .crate-image { */
+  /*   width: auto; */
+  /*   height: 120px; */
+  /* } */
 
   .crate-meta {
     @include cluster(var(--s-2), center);
+
+    li {
+          list-style: none;
+    }
   }
 
   .crate-icon {
@@ -489,7 +623,7 @@ $breakpoints: (
       @include button-base(var(--blue-700));
       font-size: var(--s-1);
 
-      &:link { color: rgb(var(--blue-400)); }
+      &:link { color: rgb(var(--link-color)); }
       &:visited { color: rgb(var(--blue-300)); }
       
       &:hover {
@@ -500,44 +634,93 @@ $breakpoints: (
   }
 }
 
+@layer articles {
+    .articles {
+      @include stack(var(--s2));
+      @include center(var(--s-6));
+    }
+
+    .intro {
+      font-size: var(--s0);
+      color: rgb(var(--orange-100));
+      margin-bottom: var(--s2);
+      text-align: center;
+    }
+
+    .article-grid {
+      @include grid(var(--s2), 20ch); // Similar to code page
+      max-width: var(--max-width);
+    }
+
+    .summary {
+      font-size: var(--s-1);
+      color: rgb(var(--orange-100));
+    }
+}
+
 @layer homepage {
   .news-carousel {
     position: relative;
     width: 100%;
-    max-width: 600px;
-    margin: 20px auto;
-    height: calc(14 * var(--s1));
+    display: flex;
     overflow: hidden;
+    max-width: 100%; 
+    /* margin: var(--s2) auto; */
+    /* min-height: calc(16 * var(--s1)); */
+    min-height: 0;
+    align-items: center;
+
+    /* &:hover .news-item { animation-play-state: paused; } */
   }
 
   .card {
     position: relative;
-    @include card(var(--s2));
+    @include card(var(--s1));
     @include stack(var(--s-1));
-    background-color: rgb(var(--blue-900));
+    background-color: rgb(var(--background-color));
     color: rgb(var(--blue-700));
     box-shadow: 0 0 10px rgb(var(--blue-700));
     text-align: center;
     align-items: center;
+    max-width: calc(0.7 * var(--max-width));
+    margin-inline: auto;
 
     h2 {
       font-family: var(--interface-font);
       font-size: var(--s1);
-      color: rgb(var(--orange-400));
+      color: rgb(var(--orange-300));
       @include neon-glow;
+
+      .subtitle {
+        font-family: var(--heading-font);
+        font-weight: 400;
+        color: rgb(var(--orange-400));
+        font-size: var(--s0);
+        margin-top: var(--s-6)
+      }
     }
 
     p {
       font-family: var(--main-font);
       font-size: var(--s-1);
       color: rgb(var(--orange-100));
+
+    }
+
+    .corners {
+      @include cluster(var(--s0), space-between);
+      font-family: var(--interface-font);
+      font-size: var(--s-1);
+      color: rgb(var(--blue-600));
+      width: 100%;
     }
 
     a {
       @include button-base(var(--blue-700));
       font-size: var(--s-1);
+      margin-top: var(--s-1);
 
-      &:link { color: rgb(var(--blue-400)); }
+      &:link { color: rgb(var(--link-color)); }
       &:visited { color: rgb(var(--blue-300)); }
       
       &:hover {
@@ -551,16 +734,21 @@ $breakpoints: (
         inset: 0;
       }
     }
+
+    img { 
+        width: 100%;
+        max-width: 120px;
+        border-radius: var(--s-2);
+    }
   }
 
   // News carousel animations (simplified)
   .news-item {
     position: absolute;
-    width: 80%;
-    margin: var(--s2);
+    max-width: calc(0.7 * var(--max-width)); 
     padding: var(--s1);
     opacity: 0;
-    transform: translateX(-100%);
+    transform: translateX(-150%);
     animation-duration: 35s;
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
@@ -637,6 +825,9 @@ $breakpoints: (
 
   #contactform {
     @include stack(var(--s-1));
+    margin-block: 0;
+    max-width: calc(0.7 * var(--max-width));
+    margin-inline: auto;
 
     .form-group {
       @include stack(var(--s-2));
@@ -660,7 +851,7 @@ $breakpoints: (
         &:focus {
           border-color: rgb(var(--link-color));
           background: rgb(var(--background-color));
-          box-shadow: 0 0 10px rgb(var(--blue-200));
+          box-shadow: 0 0 10px rgb(var(--selected-link-color));
           outline: none;
         }
         
@@ -691,7 +882,7 @@ $breakpoints: (
       transition: background 0.3s, transform 0.3s;
 
       &:hover {
-        color: rgb(var(--blue-200));
+        color: rgb(var(--selected-link-color));
         @include neon-glow;
         transform: translateY(-2px);
       }
@@ -723,78 +914,93 @@ $breakpoints: (
 }
 
 @layer diagram {
-  .diagram {
-    max-width: max-content;
+  @mixin diagram-block {
+    @include card(var(--s0), 0px, var(--s-4));
+    border-color: rgb(var(--blue-800));
+    color: rgb(var(--background-color));
+    padding: var(--s1);
   }
-  .struct, .enum {
+
+  @mixin block-3d($color-top-left: var(--orange-50), $color-bottom-right: var(--background-color)) {
+    box-shadow: calc(-1 * var(--s-6)) calc(-1 * var(--s-5)) var(--s-6) rgba($color-top-left / 0.8),
+     var(--s-6) var(--s-5) var(--s-6) rgba($color-bottom-right / 0.8);
+  }
+
+  .struct, .enum, .primitive {
     position: relative;
-    @include stack(var(--s-1));
-    border-radius: var(--s-1);
+    @include diagram-block();
   }
   
+  .primitive {
+    background-color: rgb(var(--orange-500));
+    color: rgb(var(--orange-800));
+    padding: var(--s-3);
+    .primitive-name {
+        font-size: var(--s0);
+        color: rgb(var(--orange-700));
+    }
+  }
 
   .struct {
-    /* @include box(var(--s0), 1px, rgb(var(--orange-700)), rgb(var(--orange-300))); */
-    @include card(var(--s0), 1px);
-    color: rgb(var(--orange-300));
-    background-color: rgb(var(--orange-700));
-    box-shadow: 0 0 10px rgb(var(--orange-300));
+    background-color: rgb(var(--blue-600));
+    color: rgb(var(--blue-800));
+
+    .struct, .enum, .tuple, .primitive {
+      @include block-3d(var(--blue-800), var(--blue-200));
+    }
 
     & * {
       color: inherit; 
     }
 
     &:not(:has(ul)) {
-      margin: 0;
+      /* margin: 0; */
       padding: var(--s-3);
-      background-color: rgb(var(--orange-800));
+      background-color: rgb(var(--blue-500));
+      border-color: rgb(  var(--blue-700));
+      color: rgb(var(--blue-800));
 
       .struct-name, .enum-name {
         font-size: var(--s0);
       }
+
+      .struct-name {
+        color: rgb(var(--blue-700));
+      }
+
+      .enum-name {
+        color: rgb(var(--green-700));
+      }
     }
 
-    .struct-name, .enum-name {
+
+  }
+
+
+  .enum {
+    background-color: rgb(var(--green-600));
+    border-color: rgb(var(--green-800));
+    color: rgb(var(--green-800));
+
+    .struct, .enum, .tuple, .primitive {
+      @include block-3d(var(--green-800), var(--green-200));
+    }
+  }
+  
+    .struct-name, .enum-name, .primitive-name {
       font-family: var(--heading-font);
       font-size: var(--s1);
       font-weight: 700;
-      align-self: center;
+      text-align: center;
     }
 
     .struct-name {
-      color: rgb(var(--orange-300))
+      color: rgb(var(--blue-200));
     }
-
+    
     .enum-name {
-      color: rgb(var(--green-300))
+      color: rgb(var(--green-200));
     }
-  }
-
-  .enum {
-    /* @include box(var(--s0), 1px, rgb(var(--green-700)), rgb(var(--green-300))); */
-    @include card(var(--s0), 1px);
-    color: rgb(var(--green-300));
-    background-color: rgb(var(--green-700));
-    box-shadow: 0 0 10px rgb(var(--green-300));
-  }
-  
-  .tuple {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    /* @include box(var(--s-2), 1px, rgb(var(--purple-700)), rgb(var(--purple-300))); */
-    @include card(var(--s0), 1px);
-    color: rgb(var(--purple-300));
-    background-color: rgb(var(--purple-700));
-    box-shadow: 0 0 10px rgb(var(--purple-300));
-    border-radius: var(--s-1);
-  
-    li {
-        flex: 1;
-    }
-  }
-
-
 
 
   .field-name, .variant-name {
@@ -809,11 +1015,11 @@ $breakpoints: (
 
   .fields li, .variants li {
     margin: 0;
-    margin-top: var(--s-1);
+    /* margin-top: var(--s-1); */
   }
-  
+ 
   .vec-field {
-      border-left: var(--s-3) solid rgb(var(--green-200));
+      border-left: var(--s-4) solid rgb(var(--green-200));
       padding-left: var(--s-1);
       
       > .field-name::after {
@@ -822,7 +1028,7 @@ $breakpoints: (
   }
   
   .option-field {
-      border-left: var(--s-3) solid rgb(var(--orange-200));
+      border-left: var(--s-4) solid rgb(var(--orange-200));
       padding-left: var(--s-1);
       
       > .field-name::after {
@@ -831,7 +1037,7 @@ $breakpoints: (
   }
   
   .generic-field {
-      border-left: var(--s-3) solid rgb(var(--blue-200));
+      border-left: var(--s-4) solid rgb(var(--selected-link-color));
       padding-left: var(--s-1);
       
       > .field-name::after {
@@ -840,13 +1046,42 @@ $breakpoints: (
   }
   
   .trait-object-field {
-      border-left: var(--s-3) solid rgb(var(--purple-200));
+      border-left: var(--s-4) solid rgb(var(--purple-200));
       padding-left: var(--s-1);
       
       > .field-name::after {
         content: ' (trait object)';
       }
   }
+  
+  .diagram {
+    max-width: max-content;
+    min-width: calc(var(--max-width)/2);
+    border-width: 1px;
+    border: 1px solid rgb(  var(--var(--blue-100)));
+
+    ul:is(:not(.tuple)) {
+      @include stack(var(--s0));
+    }
+  }
+
+  .tuple {
+    @include diagram-block();
+    @include cluster(var(--s-1));
+    background-color: rgb(var(--purple-600));
+    border-color: rgb(var(--purple-800));
+    color: rgb(var(--purple-800));
+    padding: var(--s0);
+  
+    .struct, .enum, .tuple, .primitive {
+      @include block-3d(var(--purple-800), var(--purple-200));
+    }
+
+    li {
+        flex: 1;
+    }
+  }
+
 }
 
 .float-image {

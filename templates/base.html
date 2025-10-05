@@ -5,34 +5,80 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalabl
 e=yes">
-    <title>
-      {% if section.title %}{{ section.title }} | {% endif %}
-      {% if page.title %}{{ page.title }} | {% endif %}
-      Laranja's Web Shop
-    </title>
+    <title>Laranja's Rust Shop{% if section.title %} | {{ section.title }}{% endif %}{% if page.title %} | {{ page.title }}{% endif %}</title>
     <link rel="stylesheet" href="/styles.css">
-    <meta charset="UTF-8">
+    {% if section.extra.description %}<meta name="description" content="{{ section.extra.description }}">{% endif %}
+    {%- if section.extra.kw %}<meta name="keywords" content="{{ section.extra.kw }}, Rust programming language, Frank Laranja">{% endif %}
+    {%- if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
+    {%- if page.extra.kw %}<meta name="keywords" content="{{ page.extra.kw }}, Rust programming language, Frank Laranja">{% endif -%}
+    <meta property="og:title" content="Laranja's Rust Shop{% if section.title %} | {{ section.title }}{% endif %}{% if page.title -%} | {{ page.title }}{% endif %}">
+    {%- if section.extra.description %}<meta property="og:description" content="{{ section.extra.description }}">{% endif %}
+    {%- if page.description %}<meta property="og:description" content="{{ page.description }}">{% endif %}
+{%- if section.extra.menu_image %}
+    <meta property="og:image" content="{{ section.extra.menu_image | safe }}.jpg">
+{%- elif page.extra.menu_image %}
+    <meta property="og:image" content="{{ page.extra.menu_image | safe }}.jpg">
+{%- else %}
+    <meta property="og:image" content="/images/menu-laranja-shop2.jpg">
+{%- endif -%}
+    <meta property="og:type" content="website">
+    {%- if section.permalink %}<meta property="og:url" content="{{ section.permalink | safe}}">{% endif %}
+    {%- if page.permalink %}<meta property="og:url" content="{{ page.permalink | safe }}">{% endif %}
+    {% block head %}{% endblock -%}
 </head>
 <body>
+    <header>
+        <div class="hero">
+          {% if section.extra.menu_image %}
+            <picture>
+              <source srcset="{{ section.extra.menu_image | safe }}.avif" type="image/avif">
+              <source srcset="{{ section.extra.menu_image | safe }}.webp" type="image/webp">
+              <img src="{{ section.extra.menu_image | safe }}.jpg" alt="{{ section.extra.menu_image_alt }}" width="1344" height="500">
+            </picture>
+          {% elif page.extra.menu_image %}
+            <picture>
+              <source srcset="{{ page.extra.menu_image | safe }}.avif" type="image/avif">
+              <source srcset="{{ page.extra.menu_image | safe }}.webp" type="image/webp">
+              <img src="{{ page.extra.menu_image | safe }}.jpg" alt="{{ page.extra.menu_image_alt }}" width="1344" height="500">
+            </picture>
+          {% else %}
+            <picture>
+               <source srcset="/images/menu-laranja-shop2.avif" type="image/avif">
+               <source srcset="/images/menu-laranja-shop2.webp" type="image/webp">
+               <img src="/images/menu-laranja-shop2.jpg" alt="A cyberpunk smidth forging a glowing 'R' gear in a neon-lit workshop overlooking a futuristic city" width="1344" height="500">
+            </picture>
+          {% endif %}
+          <div class="header-text">
+            <nav class="menu">
+              <a href="/articles" class="nav-button{% if section.extra.section and section.extra.section == "articles" %} selected{% endif %}{% if page.extra.section and page.extra.section == "articles" %} part-of{% endif %}">Articles</a>
+                <a href="/code" class="nav-button{% if section.extra.section and section.extra.section == "code" %} selected{% endif %}{% if page.extra.section and page.extra.section == "code" %} part-of{% endif %}">Code</a>
+                <a href="/contact" class="nav-button{% if page.extra.section and page.extra.section == "contact" %} selected{% endif %}">Contact</a>
+                <a href="/about" class="nav-button{% if page.extra.section and page.extra.section == "about" %} selected{% endif %}">About</a>
+            </nav>
+            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
+          </div>
+        </div>
+    </header>
+    <main id="main-content">
     {% block content %}
     {% endblock %}
+    </main>
     <footer>
       <picture class="flourish">
          <source srcset="/images/flourish.avif" type="image/avif">
          <source srcset="/images/flourish.webp" type="image/webp">
-         <img src="/images/flourish.png" alt="flourish with lots of curls">
+         <img src="/images/flourish.png" alt="flourish with lots of curls" width="1344" height="322" loading="lazy">
       </picture>
-
-      <h3><a href="/" class="neon">Laranja's Rust Shop</a></h3>
-
-      <p>
-        <a href="/articles">articles</a>
-        | <a href="/code">code</a>
-        | <a href="/contact">contact</a>
-        | <a href="/about">about</a>
-      </p>
+      <h3><a href="/">Laranja's Rust Shop</a></h3>
+ 
+      <nav aria-label="Footer navigation">
+              <a href="/articles" class="{% if section.extra.section and section.extra.section == "articles" %} selected{% endif %}{% if page.extra.section and page.extra.section == "articles" %} part-of{% endif %}">Articles</a>
+              | <a href="/code" class="{% if section.extra.section and section.extra.section == "code" %} selected{% endif %}{% if page.extra.section and page.extra.section == "code" %} part-of{% endif %}">Code</a>
+              | <a href="/contact" class="{% if page.extra.section and page.extra.section == "contact" %} selected{% endif %}">Contact</a>
+              | <a href="/about" class="{% if page.extra.section and page.extra.section == "about" %} selected{% endif %}">About</a>
+      </nav>
       
       <p>&copy;{{ now() | date(format="%Y") }} <a href="/about/">Frank Laranja</a>
-    <footer>
+    </footer>
 </body>
 </html>

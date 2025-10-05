@@ -1,10 +1,15 @@
 base_url = "https://franklaranja.github.io/"
+title = "Laranja's Rust Shop"
+description = "Articles and open-source software by Frank Laranja using the Rust programming language"
+author = "Frank Laranja"
 
+# minify_html = true
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
 
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = false
+feed_filename = "atom.xml"
 
 [markdown]
 # Whether to do syntax highlighting
@@ -12,6 +17,7 @@ build_search_index = false
 highlight_code = true
 highlight_theme = "rust-shop"
 extra_syntaxes_and_themes = ["syntaxes"]
+smart_punctuation = true
 
 [extra]
 # Put all your custom variables here

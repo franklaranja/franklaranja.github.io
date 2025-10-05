@@ -1,33 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <header>
-        <div class="hero">
-            <picture>
-               <source srcset="/images/menu-gear-water.avif" type="image/avif">
-               <source srcset="/images/menu-gear-water.webp" type="image/webp">
-               <img src="/images/menu-gear-water.jpg" alt="A red hot gear with a 'R' being put in water">
-            </picture>
-            <nav class="menu">
-                <a href="/articles" class="nav-button selected">Articles</a>
-                <a href="/code" class="nav-button">Code</a>
-                <a href="/contact" class="nav-button">Contact</a>
-                <a href="/about" class="nav-button">About</a>
-            </nav>
-            <h1 class="site-title"><a href="/">Laranja's Rust Shop</a></h1>
-        </div>
-    </header>
-    <main>
-        <section>
-          {% for page in section.pages %}
-          <article>
-          <h2><a href="{{ page.permalink | safe }}">{{ page.title }}</a></h2>
-          <p><strong><em>{{ page.extra.subtitle }}</em></strong><br />
-          {{ page.date }}</p>
-          <p>{{ page.extra.summary }}</p>
-          </article>
-          {% endfor %}
-        </section>
-    </main>
+<section class="articles" aria-label="Articles Section">
+  <p class="intro center">Dive into articles on Rust programming, design patterns, and open-source insights from <a href="/about">Frank Laranja</a></p>
+  <div class="article-grid">
+  {%- for page in section.pages %}
+    <div class="card">
+    <p class="date">{{ page.date }}</p>
+    {%- if page.extra.image %}
+    <p class="center"><picture>
+        <source srcset="{{ page.permalink | safe }}{{ page.extra.image }}.avif" type="image/avif">
+        <source srcset="{{ page.permalink | safe }}{{ page.extra.image }}.webp" type="image/webp">
+        <img src="{{ page.permalink | safe}}{{ page.extra.image }}.png" alt="{{ page.extra.image_alt | default(value='Icon for ' ~ page.title) }}" class="page.image">
+    </picture></p>
+    {%- endif %}
+    <h2>{{ page.title }}{% if page.extra.subtitle %} <span class="subtitle">{{ page.extra.subtitle }}</span>{% endif %}</h2>
+    {%- if page.extra.summary %}
+    <p class="summary">{{ page.extra.summary | safe }}</p>
+    {%- endif %}
+    <a href="{{ page.permalink | safe }}" class="cta-button">Read More</a>
+    </div>
+  {%- endfor %}
+  </div>
+</section>
 {% endblock content %}
 

@@ -1,23 +1,35 @@
 [[item]]
-title = "nodyn v0.2.2"
-date = 2025-08-01
-description = "Added support for polymorphic Vecs"
+title = "nodyn"
+subtitle = "Flexible, dynamic and type-safe composition in Rust"
+date = 2025-08-28
 link = "/code/nodyn/"
+type = "crate"
+image = "nodyn_gear"
+image_alt = "Polymorphic gear"
 
 [[item]]
 title = "Garnish your Widgets"
-date = 2025-08-02
-description = "Flexible, Dynamic and Type-Safe Composition in Rust using a flat decorator pattern."
+subtitle = "Flexible, dynamic and type-safe composition in Rust"
+date = 2025-09-29
 link = "/articles/garnish-your-widgets/"
+type = "article "
+image = "garnish_almonds"
+image_alt = "almonds arranged in a flower pattern"
 
 [[item]]
-title = "nodyn v0.2.2"
-date = 2025-08-03
-description = "Added support for polymorphic Vecs"
+title = "nodyn"
+subtitle = "Flexible, dynamic and type-safe composition in Rust"
+date = 2025-09-30
 link = "/code/nodyn/"
+type = "crate"
+image = "nodyn_gear"
+image_alt = "Polymorphic gear"
 
 [[item]]
-title = "ratatui-garnish v0.1.0"
-date = 2025-09-04
-description = "Garnish your Ratatui Widgets"
+title = "ratatui-garnish"
+subtitle = "Garnish your Ratatui Widgets"
+date = 2025-10-01
 link = "/code/ratatui-garnish/"
+type = "crate"
+image = "basil"
+image_alt = "basil sprig"
