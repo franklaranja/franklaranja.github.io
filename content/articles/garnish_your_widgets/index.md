@@ -7,7 +7,7 @@ subtitle = "Flexible, dynamic and type-safe composition in Rust"
 summary_a = "This article presents a novel “flat decorator” pattern that addresses limitations in traditional decorators and widget designs. It achieves composability without nesting or type explosion."
 summary = "This article explores composition patterns in Rust and demonstrates that composition using a wrapper which provides the combining functionality, allows for simple components to be arranged in flexible and dynamic ways."
 description = "An article about composition patterns in Rust, it demonstrates that composition using a wrapper which provides the combining functionality, allows for simple components to be arranged in flexible and dynamic ways."
-kw = "Rust design pattern, flat decorator, ratatui, tui, composition, blog"
+kw = "Rust design pattern, flat decorator, ratatui, TUI, composition, blog"
 menu_image = "/images/menu-ratatui-garnish"
 menu_image_alt = "Ratatouille garnished with little purple flowers and basil leaves served in a bowl with a gear shaped edge"
 image = "garnish_almonds"
@@ -34,10 +34,10 @@ composed of what? When composing two items, say a block and a widget,
 widget can contain block (as in *Ratatui*), block can contain widget or
 a new type can be created containing both.
 
-An additional pain point in the *Ratatui* API is that after setting a `Block`
-you lose access to it, making it impossible to check or modify `Block` after
+An additional pain point in the *Ratatui* API (version 0.29.0) is
+that after setting a `Block` you lose access to it, making it impossible to check or modify `Block` after
 construction. I don't see good reasons for changing the visibility of public
-items, it sure is inconvenient and not user friendly.
+items, it's inconvenient and not user friendly.
 
 To scratch the itch, I wrote a library that doesn't require widgets to contain
 `Style` and `Block` or even know about them. As a consequence, it makes it easier
@@ -46,6 +46,8 @@ to write widgets and new ways to modify widgets: **ratatui-garnish**
 It uses a flexible,
 dynamic and type-safe composition pattern for Rust. I found the result interesting
 and so wrote this article about it. I hope you find it interesting too!
+
+
 
 <div class="center">
 
@@ -57,7 +59,7 @@ and so wrote this article about it. I hope you find it interesting too!
 
 A widget in *Ratatui* is something that implements one of the Widget traits
 `Widget`, `WidgetRef` or stateful versions of those. `Widget`'s render
-method simply calls `render_ref()` and then eats your widget. How rude! So 
+method simply calls `render_ref()` and then eats your widget, how rude! So 
 lets look at the implementation of `WidgetRef`. Many of *Ratatui*'s widgets
 follow this template:
 
@@ -80,34 +82,28 @@ impl WidgetRef for WidgetFoo<'_> {
 }
 ```
 
-Of course, style and block are used in several other methods, the constructor
-`new` and the setter for `Block`. `Style` got its own trait, `Styled`).
-`Block` and `Style` act the same in each widget, is it necessary to repeat this
-code? In addition `Block` has its own `Style`, I assume that the widget needs
-it own version is because block is optional. I suspect `Block` has grown, it
+Of course, `Style` and `Block` are used in several other methods, such
+as in the constructor `new` and the setter for `Block`. But
+`Block` and `Style` act the same in each widget, is it necessary 
+to repeat this code? In addition `Block` has its own `Style`, 
+I assume that the widget needs it own version of `Style` is because `Block` 
+is optional, but when `Block` is used the `Style` of a widget
+can be defined in two places. I suspect `Block` has grown, it
 acquires more features as the alternative is to change all the
-widgets,is it still a block? What is it?
+widgets. Is it a block? What is it? 
 
 Let's analyze the rendering of a widget. `Style` and `Block` are handled first,
-here is what happens:
-
- 1. Style renders before widget renders
- 2. Block renders before widget renders
- 3. Block changes area before widget renders
-
-They both run some code before the widget is rendered, and `Block` changes the
+they both run some code before the widget is rendered, and `Block` changes the
 `area` parameter for the widget, but they don't change any other aspect
-of the widget. The widget doesn't need them. The inclusion of both is repetitive,
-leads to complexity and inflexibility.
+of the widget.
 
-Let's ask the question “What is composed of what?”. Can we turn the composition
-inside out, include widgets in `Block` (and `Style` too), the
-second composition way:
+What happens when we turn the composition inside out, include 
+widgets in `Block`, the second composition way?
   
 ```rust
 struct Block<'a> {
    widget: Box<dyn WidgetRef>,
-   /// other block fields
+   // other Block fields
 }
 
 impl WidgetRef for Block<'_> {
@@ -120,7 +116,7 @@ impl WidgetRef for Block<'_> {
 }
 ```
 
-So `Block` becomes a wrapper of a widget and implements `Widget`, it 
+So `Block` becomes a wrapper of a widget, it 
 modifies the input and/or the output of the contained widget. As
 it is a widget itself, it suddenly is possible to add two borders
 around the widget. Voilà! Now our widgets become like onions: 
@@ -151,7 +147,6 @@ is what we need to solve modifying widgets. Indeed the Gang of Four use
 widgets as an example for the decorator pattern, and I wonder if the name comes
 from this use.
 
-
 The gang continues about decorators:
 
 > Avoids feature-laden classes high up in the hierarchy. Decorator
@@ -163,8 +158,8 @@ The gang continues about decorators:
 >
 >  {{ cite(authors="Gamma et al.", year="1994", id="ref-gamma1994") }}
 
-Hey, that complex, customizable class, that is the `Block` widget
-right there! And those simple pieces! Yummy! Gimme, gimme, gimme!
+Hey, that complex, customizable class, that is the `Block`
+widget, right there! And those simple pieces! Yummy! Gimme, gimme, gimme!
 
 <div class="center">
 {{ picture(src="garnish_parsley", ext="png", alt="Decorative image of garnish, a Parsley leaf", class="w20") }}
@@ -177,7 +172,6 @@ Let's build decorators for our widgets. As they are *Ratatui* widgets,
 we are not going to simply decorate them, we are going to *garnish* them.
 I'd like to avoid implementing all the variations of the `Widget`
 trait. Here is a trait to modify widgets:
-
 
 ```rust
 /// A trait that can modify the rendering of a widget.
@@ -210,10 +204,29 @@ and `Block` in rendering widgets. The last method, `after_render`, is new.
 That is not something the `Block` widget does. Can you think of a useful
 Garnish that renders after the widget has been rendered?
 
-In a way I think the use of the term “decorator pattern” is a bit unfortunate
-as it implies a certain application. What we really doing is function
-composition using traits. And this is way more powerful than just decorating
-a widget with a border.
+Now garnishes (decorators) are easier to write, they only have to implement one
+of `RenderModifier`'s functions. These functions
+are hooks that van be used to modify the `render` functions of
+the `Widget` traits. So it is a way to compose traits and a bit like
+composing functions in functional programming. Here is
+a JavaScript function composition example:
+
+> ```javascript
+> const compose = (f, g) => x => f(g(x))
+> ```
+>
+> The composition of two functions returns a new function. This makes
+> perfect sense: composing two units of some type (in this case function)
+> should yield a new unit of that very type. You don't plug two legos
+> together and get a lincoln log. There is a theory here, some underlying
+> law that we will discover in due time.
+>
+> {{ cite( id="ref-frisby2025", authors="Frisby, F.", year="2025") }}
+
+Well, with traits this is a bit different as they exist in
+combination with a struct or enum. Applying Frisby's logic,
+when composing structs we should use the third way of composition: 
+returning a new unit of that very type (in this case struct).
 
 <div class="center">
 {{ picture(src="garnish_flower", ext="png", alt="Decorative image of garnish, a flower", class="w20") }}
@@ -222,17 +235,21 @@ a widget with a border.
 
 </div>
 
-Let's look again at the composition method. We need a way to combine a 
-widget with the garnish. There is a problem with this, as I mentioned above the onion
-structure that we get, this recursive `struct`, has some downsides: 
-the  widget and garnishes are neither easy to access, nor modify. Instead
-of creating this onion, what about the third way, creating a new type
-that wraps the widget and the garnishes? Can we create a `struct` that
-both wraps the widget and a `Vec` of garnishes? We would be able to
- easily access all applied garnishes. We would have all the ways of a
-vector to modify the garnishes and we would not need to implement
-all variations of `Widget` for each garnish, only the relevant methods of
-`RenderModifier`. I would like something like:
+Hopefully the third way will solve some of the problems of the
+traditional decorator pattern has that I've not mentioned. For
+example their recursive nature makes accessing or modifying
+the  widget and garnishes hard. You'll find a comprehensive
+comparison of the patterns below.
+
+Can we create a new type that wraps the widget and the garnishes,
+instead of including one in the other?
+Can we create a struct that both wraps the widget and a collection
+of garnishes? With this struct we would be able to easily access
+all applied garnishes. If we use a vector we would have all of its
+extensive and well known methods to access and modify our garnishes.
+And as this new type also combines the `Widget` traits with `RenderModifier`
+we would only need to implement the relevant methods of `RenderModifier`
+for each garnish. I would like something like:
 
 ```rust
 pub struct GarnishedWidget<W> {
@@ -245,12 +262,25 @@ Wait a minute! `RenderModifier` is a trait! No `Vec` for you!
 
 Well, we could use trait objects, but you know what happens with them: all your
 garnishes start looking the same and you can't tell lemon zest from
-parsley. Let's use an `enum` instead so we don't lose our garnishes...
-I mean types. To avoid writing the boiler plate for the `enum` I use the
-`nodyn!` macro provided by the [nodyn](/code/nodyn/) crate 
-{{ cite(authors="Laranja, F.", year="2025-2", id="ref-laranja2025-2") }},
-which also helps with this polymorphic `Vec` we need for our
-`GarnishedWidget`:
+parsley.
+
+> In Chapter 8, we mentioned that one limitation of vectors is that they
+> can store elements of only one type. We created a workaround in Listing
+> 8-9 where we defined a `SpreadsheetCell` enum that had variants to hold
+> integers, floats, and text. This meant we could store different types of
+> data in each cell and still have a vector that represented a row of cells. 
+> This is a perfectly good solution when our interchangeable items are a fixed
+> set of types that we know when our code is compiled.
+>
+> {{ cite(authors="Klabnik et al.", year="2025", id="ref-klabnik2025") }}
+
+Let's use an enum, so we don't lose our garnishes...
+I mean types.  A disadvantage of `enums` is 
+the amount of boilerplate code required. The nodyn crate
+{{ cite(authors="Laranja, F.", year="2025", id="ref-laranja2025") }}
+provides a macro that makes using enums for polymorphism easy,
+avoids the boilerplate and it also helps with this
+polymorphic vector we need for our `GarnishedWidget`:
 
 ```rust
 use derive_more::{Deref, DerefMut};
@@ -291,23 +321,6 @@ nodyn::nodyn! {
 Note: **ratatui-garnish** also has a stateful version of
 `GarnishedWidget` for `StatefulWidget`.
 
-<aside>
-
-# Polymorphism with enums
-
-> This is a perfectly good solution
-> when our interchangeable items are a fixed set of types that we
-> know when our code is compiled.
-> {{ cite(authors="Klabnik et al.", year="2025", id="ref-klabnik2025") }}
-
-Using enums has several advantages over trait objects, for example 
-it prevents type erasure. It has its disadvantages too, such as
-the amount of boiler plate code it requires. The nodyn crate
-{{ cite(authors="Laranja, F.", year="2025", id="ref-laranja2025") }}
-provides a macro that makes using enums for polymorphism easy.
-
-</aside>
-
 The `nodyn!` macro generates an `enum Garnish` which we use as an alternative to
 trait objects, the variants are the different garnishes we have:
 `Style` and `Block`. The macro generates the variant names for us, e.g.
@@ -317,7 +330,7 @@ feature `nodyn` generates methods like `is_style` and
 `try_as_style`.
 
 ```rust
-let red_garnish: Garnish = Style::default().fg(Color::Red);
+let red_garnish: Garnish = Style::default().fg(Color::Red).into();
 assert!(red_garnish.is_style());
 
 let red_style = red_garnish.try_as_style_ref().unwrap();
@@ -336,8 +349,8 @@ variant-specific access. The `garnishes!` macro is also generated
 for easy initialization. `Garnishes` is useful for garnishing
 several widgets with the same garnishes.
 
-The `#[vec(garnishes)]` attribute instructs nodyn to turn the 
-`struct` that follows into a polymorphic `Vec` by adding a field
+The `#[vec(garnishes)]` attribute instructs `nodyn!` to turn the 
+struct that follows into a polymorphic `Vec` by adding a field
 `garnishes` with the type of `Vec<Garnish>`. I used the [derive_more](..)
 crate
 {{ cite(authors="Fennema, J.", year="2025", id="ref-fennema2025") }},
@@ -346,7 +359,7 @@ acts like the widget it wraps and as a `Vec` of `Garnishes` as well. Now
 we can simply add garnishes by pushing them to the widget.
 
 Although `GarnishedWidget` is called a widget, it hasn't got 
-the traits dude! Let's add:
+the traits bro! Let's add:
 
 ```rust
 impl<'a, W: Widget + Clone> Widget for GarnishedWidget<'a, W> {
@@ -380,9 +393,9 @@ impl<'a, W: WidgetRef + Clone> WidgetRef for GarnishedWidget<'a, W> {
 
 As you can see the `after_render()`s are executed in the same order
 as the `before_render()`s, which makes it bit easier to reason about than
-the recursive `struct` from the basic decorator pattern. Let's finish off
+the recursive struct from the basic decorator pattern. Let's finish off
 our `GarnishedWidget` by giving it a constructor, and
-as push doesn't sound like what a chef does to decorate a dish
+as push doesn't sound like what a chef does to decorate a dish,
 lets wrap that and make it chainable:
 
 ```rust
@@ -404,8 +417,8 @@ impl<'a, W> GarnishedWidget<'a, W> {
 ```
 
 Instead of composing `Style`, `Block` and widgets by including one within another
-I created a new `struct` to combined them all: a **flat decorator**.
-By using a `enum` instead of trait objects, type erasure is avoided.
+I created a new struct to combined them all: a **flat decorator**.
+By using a enum instead of trait objects, type erasure is avoided.
 This setup is a bit more complex than the basic decorator, but this
 initial complexity and the leverage of traits
 makes the subsequent implementation of garnishes a breeze.
@@ -418,7 +431,8 @@ makes the subsequent implementation of garnishes a breeze.
 </div>
 
 To make garnishing widgets even easier, I wrote an extension
-traits for for the widget traits that adds a `garnish` method to
+traits, `GarnishableWidget` and `GarnishableStatefulWidget`,
+for for the widget traits that adds a `garnish` method to
 any widget. That method turns the widget in a `GarnishedWidget`
 and adds a garnish.
 
@@ -436,11 +450,11 @@ let widget = Line::raw("Hello, World!")
 ```
 
 As you can see with **ratatui-garnish**, you can easily turn the
-three blockless text widgets from *Ratatui* `Text`, `Line` and `Span`, into
-full widgets with borders, padding & titles.
+three text widgets from *Ratatui* that don't contain `Block`:
+`Text`, `Line` and `Span`, into widgets with borders, padding & titles.
 
 <div class="center">
-{{ picture(src="garnish_basil", ext="png", alt="Decorative image of garnish, Basil leaves", class="w30") }}
+{{ picture(src="garnish_basil", ext="png", alt="Decorative image of garnish, Basil leaves", class="w40") }}
 
 ## Garnishes
 
@@ -469,9 +483,9 @@ impl<'a> Garnish for Block<'a> {
 ```
 
 `Block` can do lots of things: it has its own `Style`, it can render a border with 
-titles and add padding. I like to split this up in light weight, simpler garnishes, 
+titles and add padding. I like to split this up in lightweight, simpler garnishes, 
 which can than easily be combined in all kind of ways. `Style`
-we already have. For padding we can use the `Padding` `struct` that `Block` uses:
+we already have. For padding we can use the `Padding` struct that `Block` uses:
 
 ```rust
 use ratatui::widgets::Padding;
@@ -487,6 +501,9 @@ impl Garnish for Padding {
     }
 }
 ```
+
+Note: **ratatui-garnish** uses its own `Padding` which is the same as *Ratatui*'s 
+but can be serialized and deserialized using `default`.
 
 <div class="center">
 {{ picture(src="garnish_jullien1", ext="png", alt="Decorative image of garnish, vegetable jullien", class="w40") }}
@@ -515,16 +532,18 @@ version 0.1.0 (more garnishes are planned).
 - `Shadow` (light `░`, medium `▒`, dark `▓`, or full `█` shades with full-character offsets)
 - `HalfShadow` (full `█` or quadrant characters with half-character offsets)
 
+### Padding
+- `Padding` (spacing around the widget)
+
 ### Built-in *Ratatui* Support
 - `Style` (background colors, text styling)
-- `Padding` (spacing around the widget)
 
 Have a look at the
 source of **ratatui-garnish** to look at how easy it is to
 implement a garnish, implement one or more of the methods from
 `RenderModifier`, that's all! And if you wondered about a use of `after_render`,
 have a look at the `Title<Top>` garnish from the title module, it renders
-*over* the top row of the widgets `Area`.
+*over* the top row of the widget's area.
 
 <div class="center">
 {{ picture(src="garnish_mint", ext="png", alt="Decorative image of garnish, Mint leaves", class="w35") }}
@@ -565,11 +584,28 @@ let mut other_widget = Line::raw("Other widget")
 other_widget.extend(garnishes);
 ```
 
+I've added similar methods to `GarnisableWidget` for even simpler
+construction of `GarnishedWidget`s:
+
+```rust
+let widget = Line::raw("First widget")
+    .garnishes(garnishes![
+        Style::default().fg(Color::Blue),
+        DoubleBorder::default(),
+        Padding::uniform(2),
+        Style::default().fg(Color::White),
+    ]);
+
+// create another widget with the same garnishes
+let other_widget = Line::raw("Other widget")
+    .garnishes_from_slice(widget.as_slice());
+```
+
 All garnishes and `Garnishes` can implement `Serialize` and
 `Deserialize` from serde
 {{ cite(authors="Tryzelaar & Tolnay", year="2025", id="ref-tryzelaar2025") }}
-when you enable this feature of **ratatui-garnish**. This makes it easy to
-make your tui applications themable!
+(enable the serde feature in your Cargo.toml). This makes it easy to
+implement theme support for your TUI applications!
 
 <div class="center">
 {{ picture(src="garnish_roquefort", ext="png", alt="Decorative image of garnish, crumbled Roquefort", class="w45") }}
@@ -743,9 +779,11 @@ let benchmark_widget = Text::raw("Hello World!")
     .decorate(Padding::horizontal(2));
 ```
 
-Ain't flexibility great! Now I can run some benchmarks that only
+Flexibility is great! Now I can run some benchmarks that only
 compare the two composition patterns as the widgets and
-garnishes are exactly the same. 
+garnishes are exactly the same. It's also easier to improve the
+ergonomics of this pattern as functions only need to be added to
+`DecoratedWidget` and not to every decorator.
 
 <div class="center">
 {{ picture(src="garnish_almonds", ext="png", alt="Decorative image of garnish, Almonds", class="w35") }}
@@ -758,18 +796,15 @@ In this article we looked at three way of type composition in
 Rust: the *Ratatui* way of including decorators (`Style` and
 `Block`) directly in widgets, the traditional decorator pattern
 which includes widgets in decorators, and the flat decorator
-which combines a widget with decorators in a new type. Each
-approach has distinct trade-offs in type safety, flexibility,
-performance, maintainability, and developer ergonomics.
+which combines a widget with decorators in a new type. 
 
-| Criteria        | Ratatui Way | Traditional Decorator | Flat Decorator |
+| Criteria        | Ratatui | Traditional Decorator | Flat Decorator |
 |-----------------|-------------|-----------------------|----------------|
-| **Type Safety**     | High        | High or Moderate (trait objects) | High |
-| **Flexibility**     | Low         | High                  | Very High      |
-| **Performance**     | Good        | Good or Poor (trait objects) | Good    | 
-| **Maintainability** | Low         | Moderate              | High           |
-| **Ergonomics**      | Poor        | Moderate              | Excellent      |
-
+| **Type Safety**     | ★★★★★   | ★★★★★/★★★ | ★★★★★ |
+| **Flexibility**     | ★         | ★★★              | ★★★★★      |
+| **Performance**     | ★★★★★       | ★★★★★/★★★★ | ★★★★★  | 
+| **Maintainability** | ★         | ★★★            | ★★★★★       |
+| **Ergonomics**      | ★        | ★★            | ★★★★★     |
 
 The description of each approach includes
 an example diagram based on the *Ratatui* `Paragraph` widget, as the
@@ -781,12 +816,12 @@ contained types. These fields are
 indicated with the type in parenthesis after the field name and a colored bar
 in front of the field. Generics and trait objects, which are
 similarly marked¸ have concrete types. Primitives are
-dark-orange, structs are blue, enums green and tuples purple.
+dark orange, structs are blue, enums green and tuples purple.
 
 I have included benchmark statistics for each approach created
 with criterion {{ cite(authors="Apericio & Heisler", year="2025", id="ref-apericio2025") }}. The decorator patterns used a `Text` widget with
 similar decorators
-as used to construct the `Paragraph` widget for the Ratatui way
+as used to construct the `Paragraph` widget for the *Ratatui* way
 benchmark. The benchmark is for creating the widget with garnish
 and rendering to a *Ratatui* `Buffer`. You can find the benchmark
 code in the benches directory of the **ratatui-garnish** repo.
@@ -1251,11 +1286,11 @@ benchmarks. It also simplifies implementing decorators.
 In this article I introduced the flat decorator pattern that
 I used to write the **ratatui-garnish** crate. This pattern
 composes widgets and decorators by wrapping them in a new type
-(`GarnisedWidget` and `GarnishedStatefulWidget`). The decorators
+(`GarnishedWidget` and `GarnishedStatefulWidget`). The decorators
 have their own trait (`RenderModifier`) which gets combined width
 the `Widget` and friends traits in `GarnishedWidget`. All
-decorators are contained within a single `Vec` using `enum`
-polymorphism. The `enum` adds a bit of memory overhead and extra
+decorators are contained within a single `Vec` using enum
+polymorphism. The enum adds a bit of memory overhead and extra
 logic (variant matching), it is generated using the nodyn macro
 which icreases compilation time. But the `Vec` provides a familiar and
 easy API to manipulate the decorators. The `garnishes!` macro and 
@@ -1329,27 +1364,51 @@ implement `RenderModifier`. Maintaining the new type
 
 </div>
 
-The flat decorator that I described here, resulted from creating
-a new type to handle the composition. The components, in
-**ratatui-garnish** widgets and decorators, only handle what they need
-to, which makes them simpler, which improves maintainability and
-development of new components. I came to this solution by
-focusing on ways to simplify the components, I was not looking
-for a pattern. The result offers additional additional benefits:
-flexibility and great ergonomics. I expect that the dynamic
-nature of this solution not only makes theme support for tui
-applications easier but improving other ux features of tui
-applications as well.
+The **ratatui-garnish** library introduces a flat decorator pattern
+that transforms widget modification in *Ratatui*, offering a
+type-safe, flexible, and efficient alternative to the traditional
+*Ratatui* approach and recursive decorator patterns.
 
-When I am writing a library it is often hard to image different
+The pattern resulted from creating
+a new type to handle the composition. The components in
+**ratatui-garnish**, widgets, decorators and composers, have clear
+roles and handle only what they need to. This results in simpler code
+which is easier to understand, improving maintainability and
+facilitates development of new components. The result offers
+additional benefits: flexibility and great ergonomics.
+The dynamic nature of this solution can improve many ux features
+of TUI applications.
+
+When I am writing a library it is often hard to image all different
 usage scenarios, and which composition pattern has the
 best trade-offs. Splicing the composition functionality into a
 new type makes it easy to cater to different needs.
-**Ratatui-garnish** offers the flat decorator for complex and
-dynamic tuis and when each micro second counts it has a
-traditional decorator for you.
+**Ratatui-garnish** offers the flat decorator `GarnishedWidget`
+for complex and dynamic TUIs and a traditional decorator
+`DecoratedWidget` for when you only want to apply a couple of
+garnishes with less overhead.
 
-When you find good use for this pattern I would like to hear about it!
+From scratching an itch and simplifying code I came to powerful
+tool to streamline widget development and unlock creative 
+possibilities. Developing new effects, garnishes, is simplified thanks to the
+`RenderModifier` trait. **Ratatui-garnish**'s fluent API,
+exemplified by the `garnishes!` macro and `GarnishableWidget` trait,
+makes it easy to experiment with complex effects, such as combining
+multiple borders, titles, and shadows, as shown in the recipes
+section. The use of enum polymorphism via the `nodyn!` macro
+ensures compile-time type safety, while the contiguous `Vec`
+structure simplifies modifications,
+addressing the limitations of embedded `Style` and `Block` fields
+or recursive structures. This pattern not only reduces boilerplate
+but also empowers developers to create visually rich TUIs with
+minimal effort.
+
+Beyond TUIs, the flat decorator pattern might be useful in other
+situations that benefit from flexible, dynamic and type-safe
+composition. For situations where it is not suitable
+the principle of creating a new type to handle the composition
+might still apply. I would love to here about such patterns and
+new garnishes of course, [get in touch](/contact)!
 
 <section role="doc-bibliography">
 
@@ -1391,6 +1450,14 @@ When you find good use for this pattern I would like to hear about it!
        title="derive_more",
        source_type="crate",
        url="https://crates.io/crates/derive_more" )}}
+- {{ reference(
+       id="ref-frisby2025",
+       authors="Frisby, F.",
+       year="2025",
+       title="Professor Frisby's mostly adequate guide to functional programming",
+       source_type="website",
+       url="https://mostly-adequate.gitbooks.io/mostly-adequate-guide/"
+       note="Chapter 5: Coding by Composing" )}}
 - {{ reference(
        id="ref-gamma1994",
        authors="Gamma, E., Helm, R., Johnson, R., & Vlissides, J.",

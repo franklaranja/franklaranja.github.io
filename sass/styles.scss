@@ -104,13 +104,27 @@ $breakpoints: (
   background-color: rgb($bg-color);
   color: rgb($text-color);
   padding: var(--s-5) var(--s-2);
-  border: 1px solid rgb($text-color);
-  border-radius: var(--s-2);
+  border: 2px solid transparent;
+  border-radius: 100vw;
 }
 
-@mixin button-base($bg-color, $text-color: var(--link-color)) {
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 135deg;
+  inherits: true;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 1turn;
+  }
+}
+
+@mixin button-base($bg-color, $text-color: var(--link-color), $highlight: var(--purple-200)) {
   @include rounded-box($bg-color, $text-color);
-  background-color: rgba($bg-color / 0.5);
+  background:
+    linear-gradient(rgba($bg-color / 0.8)) padding-box,
+    conic-gradient(from var(--angle), rgb($text-color), rgb($highlight), rgb($text-color)) border-box;
   font-family: var(--interface-font);
   font-size: var(--s0);
   font-weight: 700;
@@ -120,15 +134,22 @@ $breakpoints: (
   transition: all 0.3s ease;
   
   &:hover,
-  &:focus {
-    background-color: rgba($bg-color / 0.7);
-    transform: translateY(-2px);
+  &:focus-visible {
+    animation: rotate 3s linear infinite;
   }
 }
 
-@mixin shadowed-button($bg-color, $shadow-color, $text-color: var(--link-color)) {
+@mixin shadowed-button($bg-color, $shadow-color, $text-color: var(--link-color), $highlight: var(--purple-200)) {
   @include button-base($bg-color, $text-color);
+  background:
+    linear-gradient(rgba($bg-color / 0.8)) padding-box,
+    conic-gradient(rgb($text-color), rgb($highlight), rgb($text-color)) border-box;
   text-shadow: 2px 0 var(--s-2) rgba($shadow-color / 0.7);
+  
+  &:hover,
+  &:focus-visible {
+    animation: rotate 3s linear infinite;
+  }
 }
 
 @mixin card($padding: var(--s1), $border-width: 1px, $border-radius: var(--s-1)) {
@@ -186,6 +207,7 @@ $breakpoints: (
     background-color: rgb(var(--background-color));
     color: rgb(var(--text-color));
     margin-bottom: var(--s1);
+    text-wrap: pretty;
   }
 
   // Typography hierarchy
@@ -195,6 +217,7 @@ $breakpoints: (
     letter-spacing: var(--s-5);
     font-weight: 600;
     margin-block: 0;
+    text-wrap: balance;
 
     .subtitle {
       display: block
@@ -276,7 +299,7 @@ $breakpoints: (
     padding-left: var(--s-2);
     border-left: 1px solid rgb(var(--blue-500));
     line-height: 1.4;
-    font-size: 0.95em;
+    font-size: 0.90em;
     overflow-x: auto;
   }
 
@@ -289,6 +312,7 @@ $breakpoints: (
   }
 
   blockquote {
+    @include stack(var(--s1));
     color: rgb(var(--orange-100));
     margin-inline: var(--indent);
     padding-left: var(--s-2);
@@ -358,6 +382,10 @@ $breakpoints: (
         border: 1px solid rgb(var(--background-color));
         padding: var(--s-4);
     }
+  }
+
+  p, li {
+    hyphens: auto;
   }
 }
 
@@ -620,7 +648,7 @@ $breakpoints: (
     @include cluster(var(--s1), center, center);
 
     a {
-      @include button-base(var(--blue-700));
+      @include button-base(var(--blue-800));
       font-size: var(--s-1);
 
       &:link { color: rgb(var(--link-color)); }
@@ -716,7 +744,7 @@ $breakpoints: (
     }
 
     a {
-      @include button-base(var(--blue-700));
+      @include button-base(var(--blue-800));
       font-size: var(--s-1);
       margin-top: var(--s-1);
 
@@ -877,7 +905,10 @@ $breakpoints: (
     }
 
     .cta-button {
-      @include button-base(var(--blue-700));
+      @include button-base(var(--blue-800));
+      width: fit-content;
+      padding-inline: var(--s0);
+      align-self: center;
       cursor: pointer;
       transition: background 0.3s, transform 0.3s;
 
