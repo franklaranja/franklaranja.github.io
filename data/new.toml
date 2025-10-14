@@ -1,7 +1,7 @@
 [[item]]
 title = "nodyn"
-subtitle = "Flexible, dynamic and type-safe composition in Rust"
-date = 2025-08-28
+subtitle = "Easy polymorphism with enums"
+date = 2025-10-28
 link = "/code/nodyn/"
 type = "crate"
 image = "nodyn_gear"
@@ -10,7 +10,7 @@ image_alt = "Polymorphic gear"
 [[item]]
 title = "Garnish your Widgets"
 subtitle = "Flexible, dynamic and type-safe composition in Rust"
-date = 2025-09-29
+date = 2025-10-14
 link = "/articles/garnish-your-widgets/"
 type = "article "
 image = "garnish_almonds"
@@ -18,7 +18,7 @@ image_alt = "almonds arranged in a flower pattern"
 
 [[item]]
 title = "nodyn"
-subtitle = "Flexible, dynamic and type-safe composition in Rust"
+subtitle = "Easy polymorphism with enums"
 date = 2025-09-30
 link = "/code/nodyn/"
 type = "crate"
@@ -28,7 +28,7 @@ image_alt = "Polymorphic gear"
 [[item]]
 title = "ratatui-garnish"
 subtitle = "Garnish your Ratatui Widgets"
-date = 2025-10-01
+date = 2025-10-14
 link = "/code/ratatui-garnish/"
 type = "crate"
 image = "basil"

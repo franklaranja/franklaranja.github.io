@@ -2,7 +2,7 @@
 title = "ratatui-garnish"
 template = "code.html"
 description = "A Rust library providing a powerful composition system for Ratatui widgets."
-date = 2025-10-01
+date = 2025-10-14
 [extra]
 subtitle = "Garnish your Ratatui Widgets"
 kw = "Rust crate, open-source, ratatui-garnish, ratatui, tui, text user interface, software, library"
